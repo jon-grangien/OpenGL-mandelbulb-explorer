@@ -1,0 +1,4 @@
+[submodule "ext/glfw"]
+	path = ext/glfw
+	url = git@github.com:glfw/glfw.git
+	ignore = dirty
