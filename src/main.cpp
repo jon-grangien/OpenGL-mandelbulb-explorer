@@ -28,7 +28,6 @@ int main()
   while (!glfwWindowShouldClose(window))
   {
     // Main loop
-    std::cout << testVec.length() << std::endl;
   }
 
   glfwDestroyWindow(window);
