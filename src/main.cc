@@ -1,8 +1,11 @@
 #include <iostream>
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <utils.hh>
+#include <GLFW/glfw3.h>
 
 void error_callback(int error, const char* description);
+
+GLuint shader;
 
 int main()
 {
@@ -25,6 +28,8 @@ int main()
 
   glfwMakeContextCurrent(window);
 
+  //shader = utils::loadShaders("../shaders/shader.vert" , "../shaders/shader.frag");
+
   while (!glfwWindowShouldClose(window))
   {
     // Main loop
@@ -32,7 +37,7 @@ int main()
 
   glfwDestroyWindow(window);
   glfwTerminate();
-	return 0;
+  return 0;
 }
 
 void error_callback(int error, const char* description)
