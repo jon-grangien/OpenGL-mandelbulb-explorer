@@ -1,14 +1,22 @@
 # Mandelbulb renderer
 Render the mandelbulb (mandelbrot 3D) fractal patterns interactively, with shadow mapping and SSAO.
 
-## Installing
-This project uses glfw as a dependency, managed as a git submodule to minimize overhead
+## Environment
+Build for Linux and tested on Arch Linux. Mac support limited. Windows not implemented due to lack of interest.
+
+## Dependencies and installing
+- OpenGL
+- GLFW (included)
+- GLEW
+- GLM
+
+To get GLFW, clone the repository recursively
 
 ```sh
 git clone <this-repo> --recursive
 ```
 
-Glfw needs to be built for the hardware:  
+GLFW needs to be built for the hardware:
 ```sh
 cd ext/glfw
 cmake .
