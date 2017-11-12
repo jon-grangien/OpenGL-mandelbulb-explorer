@@ -17,6 +17,13 @@ else()
     message(FATAL "GLEW not found")
 endif ()
 
+find_package(GLM REQUIRED)
+if (${GLM_FOUND})
+    message(STATUS "GLM found")
+else()
+    message(FATAL "GLM not found")
+endif ()
+
 set(CMAKE_CXX_STANDARD 14)
 
 file(GLOB SOURCE_FILES src/*.cc)
@@ -35,7 +42,8 @@ set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include
         ${GLFW_SOURCE_DIR}/include
         ${GLFW_SOURCE_DIR}/deps
         ${OPENGL_INCLUDE_DIR}
-        ${GLEW_INCLUDE_DIRS} )
+        ${GLEW_INCLUDE_DIRS}
+        ${GLM_INCLUDE_DIR} )
 
 if (APPLE)
     find_package(X11)
@@ -56,5 +64,5 @@ include_directories(${INCLUDE_DIRS})
 #message(WARNING "extra: ${EXTRA_LIBRARIES}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -DGLEW_STATIC")
-add_executable(${APP_NAME} ${SOURCE_FILES} include/utils.hh)
+add_executable(${APP_NAME} ${SOURCE_FILES})
 target_link_libraries(${APP_NAME} glfw ${GLFW_LIBRARIES} ${EXTRA_LIBRARIES})
