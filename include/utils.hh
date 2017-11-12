@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include "types.hh"
 
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
@@ -9,7 +10,6 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 #endif
-
 
 #ifndef MANDELBULB_UTILS_H
 #define MANDELBULB_UTILS_H
@@ -89,55 +89,93 @@ GLuint compileShaders(const char *vs, const char *fs, const char *gs, const char
                       const char *vfn, const char *ffn, const char *gfn, const char *tcfn, const char *tefn) {
   GLuint v,f,g,tc,te,p;
 
+
   v = glCreateShader(GL_VERTEX_SHADER);
   f = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(v, 1, &vs, NULL);
-  glShaderSource(f, 1, &fs, NULL);
+  glShaderSource(v, 1, &vs, nullptr);
+  glShaderSource(f, 1, &fs, nullptr);
   glCompileShader(v);
   glCompileShader(f);
-  if (gs != NULL)
+  if (gs != nullptr)
   {
     g = glCreateShader(GL_GEOMETRY_SHADER);
-    glShaderSource(g, 1, &gs, NULL);
+    glShaderSource(g, 1, &gs, nullptr);
     glCompileShader(g);
   }
 #ifdef GL_TESS_CONTROL_SHADER
-  if (tcs != NULL)
+  if (tcs != nullptr)
   {
     tc = glCreateShader(GL_TESS_CONTROL_SHADER);
-    glShaderSource(tc, 1, &tcs, NULL);
+    glShaderSource(tc, 1, &tcs, nullptr);
     glCompileShader(tc);
   }
-  if (tes != NULL)
+  if (tes != nullptr)
   {
     te = glCreateShader(GL_TESS_EVALUATION_SHADER);
-    glShaderSource(te, 1, &tes, NULL);
+    glShaderSource(te, 1, &tes, nullptr);
     glCompileShader(te);
   }
 #endif
   p = glCreateProgram();
   glAttachShader(p,v);
   glAttachShader(p,f);
-  if (gs != NULL)
+  if (gs != nullptr)
     glAttachShader(p,g);
-  if (tcs != NULL)
+  if (tcs != nullptr)
     glAttachShader(p,tc);
-  if (tes != NULL)
+  if (tes != nullptr)
     glAttachShader(p,te);
   glLinkProgram(p);
   glUseProgram(p);
 
   printShaderInfoLog(v, vfn);
   printShaderInfoLog(f, ffn);
-  if (gs != NULL)	printShaderInfoLog(g, gfn);
-  if (tcs != NULL)	printShaderInfoLog(tc, tcfn);
-  if (tes != NULL)	printShaderInfoLog(te, tefn);
+  if (gs != nullptr)	printShaderInfoLog(g, gfn);
+  if (tcs != nullptr)	printShaderInfoLog(tc, tcfn);
+  if (tes != nullptr)	printShaderInfoLog(te, tefn);
 
   printProgramInfoLog(p, vfn, ffn, gfn, tcfn, tefn);
 
   return p;
 }
 
+GLuint compileShaders(const char *vertFile, const char *fragFile, const char *vertName, const char *fragName) {
+  GLuint v, f, p;
+  int vertSuccess, fragSuccess;
+  char infoLog[512];
+
+  v = glCreateShader(GL_VERTEX_SHADER);
+  f = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(v, 1, &vertFile, nullptr);
+  glShaderSource(f, 1, &fragFile, nullptr);
+  glCompileShader(v);
+  glCompileShader(f);
+  glGetShaderiv(v, GL_COMPILE_STATUS, &vertSuccess);
+  glGetShaderiv(f, GL_COMPILE_STATUS, &fragSuccess);
+
+  if(!vertSuccess) {
+    glGetShaderInfoLog(v, 512, nullptr, infoLog);
+    std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+  }
+
+  if(!fragSuccess) {
+    glGetShaderInfoLog(f, 512, nullptr, infoLog);
+    std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+  }
+
+  p = glCreateProgram();
+  glAttachShader(p, v);
+  glAttachShader(p, f);
+  glLinkProgram(p);
+
+  //glUseProgram(p);
+  glDeleteShader(v);
+  glDeleteShader(f);
+
+  printShaderInfoLog(v, vertName);
+  printShaderInfoLog(f, fragName);
+  return p;
+}
 
 GLuint loadShadersGT(const char *vertFileName, const char *fragFileName, const char *geomFileName,
                        const char *tcFileName, const char *teFileName) {
@@ -161,8 +199,12 @@ GLuint loadShadersGT(const char *vertFileName, const char *fragFileName, const c
     fprintf(stderr, "Failed to read %s from disk.\n", tcFileName);
   if ((tes==nullptr) && (teFileName != nullptr))
     fprintf(stderr, "Failed to read %s from disk.\n", teFileName);
-  if ((vs!=nullptr)&&(fs!=nullptr))
-    p = compileShaders(vs, fs, gs, tcs, tes, vertFileName, fragFileName, geomFileName, tcFileName, teFileName);
+
+  if ((vs!=nullptr)&&(fs!=nullptr)) {
+    // p = compileShaders(vs, fs, gs, tcs, tes, vertFileName, fragFileName, geomFileName, tcFileName, teFileName);
+    p = compileShaders(vs, fs, vertFileName, fragFileName);
+  }
+
   if (vs != nullptr) free(vs);
   if (fs != nullptr) free(fs);
   if (gs != nullptr) free(gs);
