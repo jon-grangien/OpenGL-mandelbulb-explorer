@@ -59,10 +59,11 @@ endif ()
 
 include_directories(${INCLUDE_DIRS})
 
-#message(WARNING "All include dirs: ${INCLUDE_DIRS}")
-#message(WARNING "All source files: ${SOURCE_FILES}")
-#message(WARNING "extra: ${EXTRA_LIBRARIES}")
+# debug
+#message(STATUS "Include dirs: ${INCLUDE_DIRS}")
+#message(STATUS "Source files: ${SOURCE_FILES}")
+#message(STATUS "Extra libs: ${EXTRA_LIBRARIES}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -DGLEW_STATIC")
-add_executable(${APP_NAME} ${SOURCE_FILES})
+add_executable(${APP_NAME} ${SOURCE_FILES} include) # without include here clion gets whiny
 target_link_libraries(${APP_NAME} glfw ${GLFW_LIBRARIES} ${EXTRA_LIBRARIES})

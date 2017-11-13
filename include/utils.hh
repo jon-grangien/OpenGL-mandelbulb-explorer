@@ -31,8 +31,8 @@ unsigned char* readFile(char * fileName) {
   fseek(file, savedPos, SEEK_SET); // Get back to pos
   long bytesInFile = numBytes;
 
-  unsigned char *buffer = (unsigned char*) malloc(bytesInFile + 1);
-  int bytesRead = fread(buffer, 1, bytesInFile, file);
+  auto *buffer = (unsigned char*) malloc(bytesInFile + 1);
+  auto bytesRead = (int) fread(buffer, 1, bytesInFile, file);
   buffer[bytesRead] = 0; // Terminate the string with 0
   fclose(file);
 
@@ -70,10 +70,10 @@ void printProgramInfoLog(GLuint obj, const char *vfn, const char *ffn,
 
   if (infologLength > 2)
   {
-    if (gfn == NULL)
+    if (gfn == nullptr)
       fprintf(stderr, "[From %s+%s:]\n", vfn, ffn);
     else
-    if (tcfn == NULL || tefn == NULL)
+    if (tcfn == nullptr || tefn == nullptr)
       fprintf(stderr, "[From %s+%s+%s:]\n", vfn, ffn, gfn);
     else
       fprintf(stderr, "[From %s+%s+%s+%s+%s:]\n", vfn, ffn, gfn, tcfn, tefn);
