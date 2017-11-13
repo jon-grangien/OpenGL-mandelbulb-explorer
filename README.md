@@ -5,12 +5,12 @@ Render the mandelbulb (mandelbrot 3D) fractal patterns interactively, with shado
 Build for Linux and tested on Arch Linux. Mac support limited. Windows not implemented due to lack of interest.
 
 ## Dependencies and installing
-- OpenGL
-- GLFW (included)
+- OpenGL 3.3+ (GLSL 330)
+- GLFW (included submodule)
 - GLEW
 - GLM
 
-To get GLFW, clone the repository recursively
+To install the applied version of GLFW, clone the repository recursively
 
 ```sh
 git clone <this-repo> --recursive
@@ -23,7 +23,7 @@ cmake .
 make
 ```
 
-If you didn't clone the repo recursively you can get the submodules like this:
+If you didn't clone the repo recursively you can get the submodule like this:
 ```sh
 git submodule update --init --recursive
 ```
