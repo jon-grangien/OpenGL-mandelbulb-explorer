@@ -1,9 +1,7 @@
-#version 330 core
+#version 420 core
 
-in vec2 outTexCoord;
-
-out vec4 outColor;
+out vec4 out_color;
 
 void main() {
-    outColor = vec4(1.0, 0.5, 1.0, 1.0);
+    out_color = vec4(1.0, 0.5, 1.0, 1.0);
 }
