@@ -24,11 +24,13 @@ vec3 up = vec3(0.0f, 1.0f, 0.0f);
 mat4 viewMatrix = glm::lookAt(eye, center, up);
 
 const GLfloat quad[4][2] = {
-  {  0.0f,  1.0f  },
-  {  1.0f,  0.0f  },
-  {  0.0f, -1.0f  },
-  { -1.0f,  0.0f  }
+  { -1.0f, -1.0f  },
+  {  1.0f, -1.0f  },
+  { -1.0f, 1.0f  },
+  { 1.0f,  1.0f  }
 };
+
+GLfloat currentTime = 0.0;
 
 int main() {
   auto glfwOk = initGlfw();
@@ -39,7 +41,6 @@ int main() {
   if (err != GLEW_OK)
     std::cout << "Error: GLEW failed to init\n";
 
-  // Global gl state
   glEnable(GL_DEPTH_TEST);
 
   shader = utils::loadShaders("../shaders/mandel_raymarch.vert" , "../shaders/mandel_raymarch.frag");
@@ -51,25 +52,23 @@ int main() {
   glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(GLfloat), quad, GL_STATIC_DRAW);
 
   // Specify that our coordinate data is going into attribute index 0, and contains two floats per vertex
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
   // Enable attribute index 0 as being used
   glEnableVertexAttribArray(0);
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
+    currentTime = (float) glfwGetTime();
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_TRUE, glm::value_ptr(projectionMatrix));
-    glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, GL_TRUE, glm::value_ptr(viewMatrix));
-
-    // Need position
     glUseProgram(shader);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    glUniform1fv(glGetUniformLocation(shader, "time"), 1, &currentTime);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
