@@ -18,17 +18,19 @@ GLFWwindow* window;
 mat4 projectionMatrix;
 
 // View matrix set up with glm
-vec3 eye = vec3(-2.0f, 0.0f, 0.0f);
+vec3 eye = vec3(0.0f, 0.0f, -2.0f);
 vec3 center = vec3(0.0f, 0.0f, 0.0f);
 vec3 up = vec3(0.0f, 1.0f, 0.0f);
 mat4 viewMatrix = glm::lookAt(eye, center, up);
 
-const GLfloat quad[4][2] = {
+const GLfloat quadArray[4][2] = {
   { -1.0f, -1.0f  },
   {  1.0f, -1.0f  },
   { -1.0f, 1.0f  },
   { 1.0f,  1.0f  }
 };
+mat4x2 quad = glm::make_mat4x2(&quadArray[0][0]);
+mat4 modelViewMatrix = quad * viewMatrix;
 
 GLfloat currentTime = 0.0;
 
@@ -49,7 +51,7 @@ int main() {
 
   glGenBuffers(1, &vbo);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(GLfloat), quad, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(GLfloat), &quad[0][0], GL_STATIC_DRAW);
 
   // Specify that our coordinate data is going into attribute index 0, and contains two floats per vertex
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
@@ -67,7 +69,7 @@ int main() {
 
     glUseProgram(shader);
     glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-    glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
     glUniform1fv(glGetUniformLocation(shader, "time"), 1, &currentTime);
 
     glfwSwapBuffers(window);
@@ -109,7 +111,7 @@ bool initGlfw() {
 void resize(GLFWwindow* win, int w, int h) {
   glViewport(0, 0, w, h);
   GLfloat ratio = (GLfloat) w / (GLfloat) h;
-  projectionMatrix = glm::perspective(90.0f, ratio, 1.0f, 1000.f);
+  projectionMatrix = glm::perspective(90.0f, ratio, 0.1f, 100.f);
 }
 
 void onClose(GLFWwindow* win) {
