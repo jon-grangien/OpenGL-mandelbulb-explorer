@@ -12,6 +12,8 @@ void resize(GLFWwindow* win, GLsizei w, GLsizei h);
 void processInput(GLFWwindow *window);
 void error_callback(int error, const char* description);
 
+float STEP_SIZE = 0.001f;
+
 GLuint shader;
 GLuint vbo, vao;
 GLFWwindow* window;
@@ -33,6 +35,8 @@ mat4x2 quad = glm::make_mat4x2(&quadArray[0][0]);
 mat4 modelViewMatrix = quad * viewMatrix;
 
 GLfloat currentTime = 0.0;
+GLfloat screenRatio;
+auto screenSize = vec2(0.0);
 
 int main() {
   auto glfwOk = initGlfw();
@@ -71,6 +75,9 @@ int main() {
     glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
     glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
     glUniform1fv(glGetUniformLocation(shader, "time"), 1, &currentTime);
+    glUniform1fv(glGetUniformLocation(shader, "screenRatio"), 1, &screenRatio);
+    glUniform1fv(glGetUniformLocation(shader, "screenSize"), 1, glm::value_ptr(screenSize));
+    glUniform1fv(glGetUniformLocation(shader, "stepSize"), 1, &STEP_SIZE);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -109,9 +116,12 @@ bool initGlfw() {
 }
 
 void resize(GLFWwindow* win, int w, int h) {
+  std::cout << "resized to " << w << ", " << h << std::endl;
   glViewport(0, 0, w, h);
-  GLfloat ratio = (GLfloat) w / (GLfloat) h;
-  projectionMatrix = glm::perspective(90.0f, ratio, 0.1f, 100.f);
+  screenSize.x = (GLfloat) w;
+  screenSize.y = (GLfloat) h;
+  screenRatio = screenSize.x / screenSize.y;
+  projectionMatrix = glm::perspective(90.0f, screenRatio, 0.1f, 100.f);
 }
 
 void onClose(GLFWwindow* win) {
@@ -130,6 +140,4 @@ void processInput(GLFWwindow *window) {
 void error_callback(int error, const char* description) {
   fprintf(stderr, "Error: %s\n", description);
 }
-
-
 
