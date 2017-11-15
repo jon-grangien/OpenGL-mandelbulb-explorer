@@ -50,7 +50,7 @@ int main() {
   std::cout << "Q: Quit\n";
   std::cout << "R: Reload shader files\n";
 
-  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_DEPTH_TEST);
 
   shader = utils::loadShaders("../shaders/mandel_raymarch.vert" , "../shaders/mandel_raymarch.frag");
   glGenVertexArrays(1,&vao);
