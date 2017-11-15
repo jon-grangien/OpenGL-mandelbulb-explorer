@@ -47,6 +47,9 @@ int main() {
   if (err != GLEW_OK)
     std::cout << "Error: GLEW failed to init\n";
 
+  std::cout << "Q: Quit\n";
+  std::cout << "R: Reload shader files\n";
+
   glEnable(GL_DEPTH_TEST);
 
   shader = utils::loadShaders("../shaders/mandel_raymarch.vert" , "../shaders/mandel_raymarch.frag");
@@ -135,6 +138,10 @@ void processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, true);
   if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
+
+  // Reload shader
+  if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+    shader = utils::loadShaders("../shaders/mandel_raymarch.vert" , "../shaders/mandel_raymarch.frag");
 }
 
 void error_callback(int error, const char* description) {

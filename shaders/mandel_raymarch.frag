@@ -13,17 +13,17 @@ out vec4 outColor;
 #define MIN_DISTANCE 0.05
 
 // March with distance estimate and return grayscale value
-float simpleMarch(vec3 from, vec3 dir) {
-	float totalDistance = 0.0;
-	int steps;
-	for (steps=0; steps < MAX_RAY_STEPS; steps++) {
-		vec3 p = from + totalDistance * dir;
-		float distance = DistanceEstimator(p);
-		totalDistance += distance;
-		if (distance < MIN_DISTANCE) break;
-	}
-	return (1.0 - float(steps) / float(MAX_RAY_STEPS)); // greyscale val based on amount steps
-}
+//float simpleMarch(vec3 from, vec3 dir) {
+//	float totalDistance = 0.0;
+//	int steps;
+//	for (steps=0; steps < MAX_RAY_STEPS; steps++) {
+//		vec3 p = from + totalDistance * dir;
+//		float distance = DistanceEstimator(p);
+//		totalDistance += distance;
+//		if (distance < MIN_DISTANCE) break;
+//	}
+//	return (1.0 - float(steps) / float(MAX_RAY_STEPS)); // greyscale val based on amount steps
+//}
 
 void main() {
     vec2 uv = fragPos + 0.5; // depends on quad input data
