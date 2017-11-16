@@ -101,7 +101,7 @@ void main() {
     //                        DE(pos+yDir)-DE(pos-yDir),
     //                        DE(pos+zDir)-DE(pos-zDir)));
 
-    vec3 from = vec3(uv.x, uv.y, 0.0);
+    vec3 from = vec3(uv.x, uv.y, -3.0);
     vec3 dir = vec3(0.0, 0.0, 1.0);
     float gsColor = simpleMarch(from, dir);
 
