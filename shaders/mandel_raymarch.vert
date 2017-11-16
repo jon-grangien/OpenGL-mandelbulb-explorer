@@ -14,7 +14,7 @@ void main() {
     fragTime = time;
 
     // TODO: Quad invisible
-    //gl_Position = projectionMatrix * modelViewMatrix * vec4(Position.xy, 0.0, 1.0);
+    // gl_Position = projectionMatrix * modelViewMatrix * vec4(Position.xy, 0.0, 1.0);
 
     gl_Position = vec4(Position.xy, 0.0, 1.0);
 }

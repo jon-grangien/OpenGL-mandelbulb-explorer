@@ -13,6 +13,8 @@ void processInput(GLFWwindow *window);
 void error_callback(int error, const char* description);
 
 float STEP_SIZE = 0.001f;
+int WIN_WIDTH = 640;
+int WIN_HEIGHT = WIN_WIDTH;
 
 GLuint shader;
 GLuint vbo, vao;
@@ -39,6 +41,9 @@ GLfloat screenRatio;
 auto screenSize = vec2(0.0);
 
 int main() {
+  std::cout << "Q: Quit\n";
+  std::cout << "R: Reload shader files\n";
+
   auto glfwOk = initGlfw();
   auto err = glewInit();
 
@@ -46,9 +51,6 @@ int main() {
     return EXIT_FAILURE;
   if (err != GLEW_OK)
     std::cout << "Error: GLEW failed to init\n";
-
-  std::cout << "Q: Quit\n";
-  std::cout << "R: Reload shader files\n";
 
   glDisable(GL_DEPTH_TEST);
 
@@ -66,9 +68,21 @@ int main() {
   // Enable attribute index 0 as being used
   glEnableVertexAttribArray(0);
 
+  double lastTime = (float) glfwGetTime();
+  int nbFrames = 0;
+
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
+
     currentTime = (float) glfwGetTime();
+    nbFrames++;
+
+    if ( currentTime - lastTime >= 1.0 ) {
+      printf("\r%.1f ms/frame, %i FPS", 1000.0 / double(nbFrames), nbFrames);
+      fflush(stdout);
+      nbFrames = 0;
+      lastTime += 1.0;
+    }
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -105,7 +119,7 @@ bool initGlfw() {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
 #endif
 
-  window = glfwCreateWindow(640, 480, "Mandelbulb explorer", nullptr, nullptr);
+  window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "Mandelbulb explorer", nullptr, nullptr);
   if (!window) {
     std::cout << "Error: glfw failed create window\n";
     glfwTerminate();
@@ -115,11 +129,12 @@ bool initGlfw() {
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, resize);
   glfwSetWindowCloseCallback(window, onClose);
+  resize(window, WIN_WIDTH, WIN_HEIGHT);
   return true;
 }
 
 void resize(GLFWwindow* win, int w, int h) {
-  std::cout << "resized to " << w << ", " << h << std::endl;
+  //std::cout << "\nresized to " << w << ", " << h << std::endl;
   glViewport(0, 0, w, h);
   screenSize.x = (GLfloat) w;
   screenSize.y = (GLfloat) h;

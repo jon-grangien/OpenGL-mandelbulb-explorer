@@ -86,11 +86,11 @@ float simpleMarch(vec3 from, vec3 dir) {
 
 void main() {
     // Middle circle unadjusted, incorrect uv
-    //vec2 uv = fragPos.xy;
+    vec2 uv = fragPos.xy;
     //uv *= screenRatio;
 
     // Correct uv but circle cornered?
-    vec2 uv = fragPos.xy + vec2(0.5); // depends on quad input data
+    //vec2 uv = fragPos.xy + vec2(0.5); // depends on quad input data
     //uv *= screenRatio;
 
     // Correct uv but no circle
