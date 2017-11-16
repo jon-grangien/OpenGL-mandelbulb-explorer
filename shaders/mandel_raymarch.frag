@@ -9,12 +9,14 @@ uniform vec2 screenSize;
 
 out vec4 outColor;
 
-#define MAX_RAY_STEPS 100
-#define MIN_DISTANCE 0.005
-#define BAIL_LIMIT 20.0
-#define POWER 6.0
+#define MAX_RAY_STEPS 400
+#define MIN_DISTANCE 0.0001
+#define MANDEL_ITERS 20
+#define BAIL_LIMIT 2.5
+#define POWER 8.0
+
 #define SPHERE_R 0.9
-#define SCALE 0.4
+#define SCALE 2.0
 
 float DESphere(vec3 p) {
     return length(p) - SPHERE_R;
@@ -45,7 +47,7 @@ float DEMandelBulb(vec3 pos) {
 	vec3 z = pos;
 	float dr = 1.0;
 	float r = 0.0;
-	for (int i = 0; i < MAX_RAY_STEPS ; i++) {
+	for (int i = 0; i < MANDEL_ITERS ; i++) {
 		r = length(z);
 		if (r > BAIL_LIMIT) break;
 
