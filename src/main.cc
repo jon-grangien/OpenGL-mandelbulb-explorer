@@ -12,9 +12,17 @@ void resize(GLFWwindow* win, GLsizei w, GLsizei h);
 void processInput(GLFWwindow *window);
 void error_callback(int error, const char* description);
 
+// Constants
 float STEP_SIZE = 0.001f;
 int WIN_WIDTH = 640;
 int WIN_HEIGHT = WIN_WIDTH;
+
+// Arg variables
+float maxRaySteps = 400.0;
+float minDistance = 0.0001;
+float mandelIters = 20;
+float bailLimit = 2.5;
+float power = 8.0;
 
 GLuint shader;
 GLuint vbo, vao;
@@ -40,7 +48,33 @@ GLfloat currentTime = 0.0;
 GLfloat screenRatio;
 auto screenSize = vec2(0.0);
 
-int main() {
+int main(int argc,  char* argv[]) {
+
+  // Handle args
+  int graphicsSetting = 1;
+  int OK = utils::handleArgs(argc, argv, graphicsSetting);
+  if (OK < 0) return -1;
+
+  switch(graphicsSetting) {
+    case 0:
+      maxRaySteps = 200.0;
+      minDistance = 0.001;
+      mandelIters = 15;
+      bailLimit = 2.5;
+      power = 6.0;
+      break;
+    case 1:
+    default:
+      break;
+    case 2:
+      maxRaySteps = 600.0;
+      minDistance = 0.00001;
+      mandelIters = 30;
+      bailLimit = 2.5;
+      power = 8.0;
+      break;
+  }
+
   std::cout << "Q: Quit\n";
   std::cout << "R: Reload shader files\n";
 
@@ -95,6 +129,13 @@ int main() {
     glUniform1fv(glGetUniformLocation(shader, "screenRatio"), 1, &screenRatio);
     glUniform1fv(glGetUniformLocation(shader, "screenSize"), 1, glm::value_ptr(screenSize));
     glUniform1fv(glGetUniformLocation(shader, "stepSize"), 1, &STEP_SIZE);
+
+    // Mandel setup
+    glUniform1fv(glGetUniformLocation(shader, "maxRaySteps"), 1, &maxRaySteps);
+    glUniform1fv(glGetUniformLocation(shader, "minDistance"), 1, &minDistance);
+    glUniform1fv(glGetUniformLocation(shader, "mandelIters"), 1, &mandelIters);
+    glUniform1fv(glGetUniformLocation(shader, "bailLimit"), 1, &bailLimit);
+    glUniform1fv(glGetUniformLocation(shader, "power"), 1, &power);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

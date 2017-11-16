@@ -7,13 +7,13 @@ uniform float time;
 uniform float screenRatio;
 uniform vec2 screenSize;
 
-out vec4 outColor;
+uniform float maxRaySteps;
+uniform float minDistance;
+uniform float mandelIters;
+uniform float bailLimit;
+uniform float power;
 
-#define MAX_RAY_STEPS 400
-#define MIN_DISTANCE 0.0001
-#define MANDEL_ITERS 20
-#define BAIL_LIMIT 2.5
-#define POWER 8.0
+out vec4 outColor;
 
 #define SPHERE_R 0.9
 #define SCALE 2.0
@@ -31,7 +31,7 @@ float DERecTetra(vec3 p) {
 	int n = 0;
 	float dist, d;
 	vec3 z;
-	while (n < MAX_RAY_STEPS) {
+	while (n < maxRaySteps) {
 		 c = a1; dist = length(z-a1);
 	        d = length(z-a2); if (d < dist) { c = a2; dist=d; }
 		 d = length(z-a3); if (d < dist) { c = a3; dist=d; }
@@ -47,19 +47,19 @@ float DEMandelBulb(vec3 pos) {
 	vec3 z = pos;
 	float dr = 1.0;
 	float r = 0.0;
-	for (int i = 0; i < MANDEL_ITERS ; i++) {
+	for (int i = 0; i < mandelIters ; i++) {
 		r = length(z);
-		if (r > BAIL_LIMIT) break;
+		if (r > bailLimit) break;
 
 		// convert to polar coordinates
 		float theta = acos(z.z/r);
 		float phi = atan(z.y,z.x);
-		dr = pow( r, POWER-1.0)*POWER*dr + 1.0;
+		dr = pow(r, power-1.0)*power*dr + 1.0;
 
 		// scale and rotate the point
-		float zr = pow( r,POWER);
-		theta = theta*POWER;
-		phi = phi*POWER;
+		float zr = pow(r,power);
+		theta = theta*power;
+		phi = phi*power;
 
 		// convert back to cartesian coordinates
 		z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
@@ -73,15 +73,15 @@ float simpleMarch(vec3 from, vec3 dir) {
 	float totalDistance = 0.0;
 	int steps;
 
-	for (steps=0; steps < MAX_RAY_STEPS; steps++) {
+	for (steps=0; steps < maxRaySteps; steps++) {
 		vec3 p = from + totalDistance * dir;
 		float distance = DEMandelBulb(p);
 		totalDistance += distance;
 
-		if (distance < MIN_DISTANCE)
+		if (distance < minDistance)
             break;
 	}
-	return (1.0 - float(steps) / float(MAX_RAY_STEPS)); // greyscale val based on amount steps
+	return (1.0 - float(steps) / float(maxRaySteps)); // greyscale val based on amount steps
 }
 
 void main() {

@@ -157,6 +157,37 @@ GLuint loadShaders(const char *vertFileName, const char *fragFileName) {
   return program;
 }
 
+void showUsage() {
+  std::cerr << "Usage: ./mandelbulb -g 1\n"
+            << "Options:\n"
+            << "\t-h,--help\tShow this help message\n"
+            << "\t-g,--graphics \tSpecify graphics setting: 0 low, 1 medium, 2 high"
+            << std::endl;
+}
+
+int handleArgs(int c, char* argv[], int &graphicsSetting) {
+  for (int i = 1; i < c; ++i) {
+    std::string arg = argv[i];
+
+    if (arg == "-h" || arg == "--help") {
+      showUsage();
+      return -1;
+    } else if (arg == "-g" || arg == "--graphics") {
+      if (atoi(argv[i+1]) == 0) {
+        graphicsSetting = 0;
+      } else if (atoi(argv[i+1]) == 1) {
+        graphicsSetting = 1;
+      } else if (atoi(argv[i+1]) == 2) {
+        graphicsSetting = 2;
+      } else {
+        showUsage();
+        return -1;
+      }
+    }
+  }
+  return 0;
+}
+
 }
 
 #endif //MANDELBULB_UTILS_H

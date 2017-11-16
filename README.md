@@ -1,8 +1,16 @@
 # Mandelbulb renderer
 Render the mandelbulb (mandelbrot 3D) fractal patterns interactively, with shadow mapping and SSAO.
 
+## Usage
+```bash
+Usage: ./mandelbulb -g 1
+Options:
+	-h,--help	Show this help message
+	-g,--graphics 	Specify graphics setting: 0 low, 1 medium, 2 high
+```
+
 ## Environment
-Build for Linux and tested on Arch Linux. Mac support limited. Windows not implemented due to lack of interest.
+Built for Linux and tested on Arch Linux. Mac support limited. Windows not implemented due to lack of interest.
 
 ## Dependencies and installing
 - OpenGL 3.3+ (GLSL 330)
