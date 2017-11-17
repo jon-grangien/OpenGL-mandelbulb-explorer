@@ -32,6 +32,7 @@ float power = 8.0;
 // App state
 bool logPerformance = false;
 bool logCoordinates = false;
+bool shouldUpdateCoordinates = false;
 
 GLuint shader;
 GLuint vbo, vao;
@@ -164,12 +165,16 @@ int main(int argc,  char* argv[]) {
   //  eye.x = 0.2f * cosf(timeFactor);
   //  eye.y = 0.2f * sinf(timeFactor);
   //  eye.z = -1.5f + 0.1f * sinf(timeFactor);
-    float x = 0.0f, y = 0.0f, z = 0.0f;
-    sphericalToCartesian(r, theta, phi, x, y, z);
-    eye = vec3(x, y, z);
-    viewMatrix = glm::lookAt(eye, center, up);
-    modelViewMatrix = quad * viewMatrix;
-    inverseMVP = glm::inverse(modelViewMatrix) * glm::inverse(projectionMatrix);
+    if (shouldUpdateCoordinates) {
+      float x = 0.0f, y = 0.0f, z = 0.0f;
+      sphericalToCartesian(r, theta, phi, x, y, z);
+      eye = vec3(x, y, z);
+      viewMatrix = glm::lookAt(eye, center, up);
+      modelViewMatrix = quad * viewMatrix;
+      inverseMVP = glm::inverse(modelViewMatrix) * glm::inverse(projectionMatrix);
+
+      shouldUpdateCoordinates = false;
+    }
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -257,39 +262,48 @@ void processInput(GLFWwindow *window) {
 
   // Movement
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    shouldUpdateCoordinates = true;
     theta -= 0.1f;
     theta = std::max(0.0f, theta);
     theta = std::min(PI, theta);
   }
 
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    shouldUpdateCoordinates = true;
     phi -= 0.1f;
     phi = std::max(0.0f, phi);
     phi = std::min(TWO_PI, phi);
   }
 
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    shouldUpdateCoordinates = true;
     theta += 0.1f;
     theta = std::max(0.0f, theta);
     theta = std::min(PI, theta);
   }
 
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    shouldUpdateCoordinates = true;
     phi += 0.1f;
     phi = std::max(0.0f, phi);
     phi = std::min(TWO_PI, phi);
   }
 
-  if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+  if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+    shouldUpdateCoordinates = true;
     r -= 0.1f;
-  if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+    shouldUpdateCoordinates = true;
     r += 0.1f;
+  }
 }
 
 void sphericalToCartesian(float r, float theta, float phi, float &x, float &y, float &z) {
   x = r * sinf(theta) * cosf(phi);
-  y = r * sinf(theta) * sinf(phi);
-  z = r * cosf(theta);
+  z = r * sinf(theta) * sinf(phi);
+  y = r * cosf(theta); // y instead as we define it as up
 }
 
 void error_callback(int error, const char* description) {
