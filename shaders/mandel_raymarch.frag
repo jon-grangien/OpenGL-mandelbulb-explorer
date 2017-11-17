@@ -3,7 +3,6 @@
 in vec2 fragPos;
 in float fragTime;
 
-in vec3 vertRayOrigin;
 in vec3 vertRayDirection;
 
 uniform mat4 projectionMatrix;
@@ -94,29 +93,26 @@ void main() {
     //vec2 uv = fragPos.xy + vec2(0.5); // depends on quad input data
     vec2 uv = fragPos.xy / screenSize.xy - vec2(0.5);
 
-
     // Estimate normal
     //vec3 n = normalize(vec3(DE(pos+xDir)-DE(pos-xDir),
     //                        DE(pos+yDir)-DE(pos-yDir),
     //                        DE(pos+zDir)-DE(pos-zDir)));
 
-    vec3 rayOrigin = vec3(uv.x, uv.y, -1.0);
-    vec3 dir = vec3(0.0, 0.0, 1.0);
+    //vec3 rayOrigin = vec3(uv.x, uv.y, -1.0);
+    //vec3 dir = vec3(0.0, 0.0, 1.0);
 
     // Inverse to world pos
-    vec4 invRayOrigin = inverse(projectionMatrix * modelViewMatrix) * vec4(rayOrigin, 1.0);
-    vec4 invDir = inverse(projectionMatrix * modelViewMatrix) * vec4(dir, 1.0);
+    //vec4 invRayOrigin = inverse(projectionMatrix * modelViewMatrix) * vec4(rayOrigin, 1.0);
+    //vec4 invDir = inverse(projectionMatrix * modelViewMatrix) * vec4(dir, 1.0);
     //float gsColor = simpleMarch(invRayOrigin.xyz, invDir.xyz);
 
     // Rays from vertex between near and far planes
-    vec3 newVertRayOrigin = vertRayOrigin;
-    newVertRayOrigin.z -= fragTime * 0.1;
+    //vec3 newVertRayOrigin = vertRayOrigin;
+    //newVertRayOrigin.z -= fragTime * 0.1;
     //float gsColor = simpleMarch(newVertRayOrigin, vertRayDirection);
-
 
     vec3 rayEyeOrigin = eyePos;
     //rayEyeOrigin.z -= fragTime * 0.1;
-    vec3 rayEyeDir = vec3(uv, 0.0) - rayEyeOrigin;
     float gsColor = simpleMarch(rayEyeOrigin, vertRayDirection);
 
     // DEBUG: Check frag pos

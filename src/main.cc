@@ -27,7 +27,7 @@ float power = 8.0;
 GLuint shader;
 GLuint vbo, vao;
 GLFWwindow* window;
-mat4 projectionMatrix;
+mat4 projectionMatrix = glm::perspective(90.0f, (GLfloat) WIN_WIDTH / (GLfloat) WIN_HEIGHT, 0.1f, 100.0f);
 
 // View matrix set up with glm
 vec3 eye = vec3(0.0f, 0.0f, -1.0f);
@@ -50,6 +50,8 @@ const GLfloat quadArray[4][2] = {
 mat4x2 quad = glm::make_mat4x2(&quadArray[0][0]);
 mat4 modelViewMatrix = quad * viewMatrix;
 
+mat4 inverseMVP = glm::inverse(modelViewMatrix) * glm::inverse(projectionMatrix);
+
 GLfloat currentTime = 0.0;
 GLfloat screenRatio;
 auto screenSize = vec2(0.0);
@@ -64,10 +66,10 @@ int main(int argc,  char* argv[]) {
   switch(graphicsSetting) {
     case 0:
       maxRaySteps = 500.0;
-      minDistance = 0.001;
-      mandelIters = 10;
+      minDistance = 0.01;
+      mandelIters = 5;
       bailLimit = 2.5;
-      power = 6.0;
+      power = 4.0;
       break;
     case 1:
     default:
@@ -131,6 +133,7 @@ int main(int argc,  char* argv[]) {
     eye.y = 0.2f * sinf(timeFactor);
     eye.z = -1.5f + 0.1f * sinf(timeFactor);
     viewMatrix = glm::lookAt(eye, center, up);
+    inverseMVP = glm::inverse(modelViewMatrix) * glm::inverse(projectionMatrix);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -139,6 +142,7 @@ int main(int argc,  char* argv[]) {
     glUseProgram(shader);
     glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
     glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "inverseMVP"), 1, GL_FALSE, glm::value_ptr(inverseMVP));
     glUniform1fv(glGetUniformLocation(shader, "time"), 1, &currentTime);
     glUniform1fv(glGetUniformLocation(shader, "screenRatio"), 1, &screenRatio);
     glUniform2fv(glGetUniformLocation(shader, "screenSize"), 1, glm::value_ptr(screenSize));
@@ -195,7 +199,8 @@ void resize(GLFWwindow* win, int w, int h) {
   screenSize.x = (GLfloat) w;
   screenSize.y = (GLfloat) h;
   screenRatio = screenSize.x / screenSize.y;
-  projectionMatrix = glm::perspective(90.0f, screenRatio, 0.1f, 100.f);
+  projectionMatrix = glm::perspective(90.0f, screenRatio, 0.1f, 100.0f);
+  inverseMVP = glm::inverse(modelViewMatrix) * glm::inverse(projectionMatrix);
 }
 
 void onClose(GLFWwindow* win) {
