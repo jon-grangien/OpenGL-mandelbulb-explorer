@@ -18,9 +18,9 @@ int WIN_WIDTH = 640;
 int WIN_HEIGHT = WIN_WIDTH;
 
 // Arg variables
-float maxRaySteps = 400.0;
+float maxRaySteps = 700.0;
 float minDistance = 0.0001;
-float mandelIters = 20;
+float mandelIters = 15;
 float bailLimit = 2.5;
 float power = 8.0;
 
@@ -30,7 +30,7 @@ GLFWwindow* window;
 mat4 projectionMatrix;
 
 // View matrix set up with glm
-vec3 eye = vec3(0.0f, 0.0f, -2.0f);
+vec3 eye = vec3(0.0f, 0.0f, -1.0f);
 vec3 center = vec3(0.0f, 0.0f, 0.0f);
 vec3 up = vec3(0.0f, 1.0f, 0.0f);
 mat4 viewMatrix = glm::lookAt(eye, center, up);
@@ -41,6 +41,12 @@ const GLfloat quadArray[4][2] = {
   { -1.0f, 1.0f  },
   { 1.0f,  1.0f  }
 };
+//const GLfloat quadArray[4][2] = {
+//    { 0.0f, 0.0f  },
+//    {  0.5f, 0.0f  },
+//    { 0.0f, 0.5f  },
+//    { 0.5f,  0.5f  }
+//};
 mat4x2 quad = glm::make_mat4x2(&quadArray[0][0]);
 mat4 modelViewMatrix = quad * viewMatrix;
 
@@ -57,9 +63,9 @@ int main(int argc,  char* argv[]) {
 
   switch(graphicsSetting) {
     case 0:
-      maxRaySteps = 200.0;
+      maxRaySteps = 500.0;
       minDistance = 0.001;
-      mandelIters = 15;
+      mandelIters = 10;
       bailLimit = 2.5;
       power = 6.0;
       break;
@@ -67,14 +73,16 @@ int main(int argc,  char* argv[]) {
     default:
       break;
     case 2:
-      maxRaySteps = 600.0;
-      minDistance = 0.00001;
-      mandelIters = 30;
+      maxRaySteps = 1200.0;
+      minDistance = 0.0001;
+      mandelIters = 20;
       bailLimit = 2.5;
       power = 8.0;
       break;
   }
 
+  std::cout << "Graphics option is set to " << graphicsSetting << std::endl << std::endl;
+  std::cout << "Keys:\n";
   std::cout << "Q: Quit\n";
   std::cout << "R: Reload shader files\n";
 
@@ -118,6 +126,12 @@ int main(int argc,  char* argv[]) {
       lastTime += 1.0;
     }
 
+    float timeFactor = 0.3f * currentTime;
+    eye.x = 0.2f * cosf(timeFactor);
+    eye.y = 0.2f * sinf(timeFactor);
+    eye.z = -1.5f + 0.1f * sinf(timeFactor);
+    viewMatrix = glm::lookAt(eye, center, up);
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -127,8 +141,9 @@ int main(int argc,  char* argv[]) {
     glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
     glUniform1fv(glGetUniformLocation(shader, "time"), 1, &currentTime);
     glUniform1fv(glGetUniformLocation(shader, "screenRatio"), 1, &screenRatio);
-    glUniform1fv(glGetUniformLocation(shader, "screenSize"), 1, glm::value_ptr(screenSize));
+    glUniform2fv(glGetUniformLocation(shader, "screenSize"), 1, glm::value_ptr(screenSize));
     glUniform1fv(glGetUniformLocation(shader, "stepSize"), 1, &STEP_SIZE);
+    glUniform3fv(glGetUniformLocation(shader, "eyePos"), 1, glm::value_ptr(eye));
 
     // Mandel setup
     glUniform1fv(glGetUniformLocation(shader, "maxRaySteps"), 1, &maxRaySteps);

@@ -3,9 +3,15 @@
 in vec2 fragPos;
 in float fragTime;
 
+in vec3 vertRayOrigin;
+in vec3 vertRayDirection;
+
+uniform mat4 projectionMatrix;
+uniform mat4 modelViewMatrix;
 uniform float time;
 uniform float screenRatio;
 uniform vec2 screenSize;
+uniform vec3 eyePos;
 
 uniform float maxRaySteps;
 uniform float minDistance;
@@ -85,34 +91,43 @@ float simpleMarch(vec3 from, vec3 dir) {
 }
 
 void main() {
-    // Middle circle unadjusted, incorrect uv
-    vec2 uv = fragPos.xy;
-    //uv *= screenRatio;
-
-    // Correct uv but circle cornered?
     //vec2 uv = fragPos.xy + vec2(0.5); // depends on quad input data
-    //uv *= screenRatio;
+    vec2 uv = fragPos.xy / screenSize.xy - vec2(0.5);
 
-    // Correct uv but no circle
-    //vec2 uv = fragPos.xy / screenSize.xy - vec2(0.5);
 
     // Estimate normal
     //vec3 n = normalize(vec3(DE(pos+xDir)-DE(pos-xDir),
     //                        DE(pos+yDir)-DE(pos-yDir),
     //                        DE(pos+zDir)-DE(pos-zDir)));
 
-    vec3 from = vec3(uv.x, uv.y, -3.0);
+    vec3 rayOrigin = vec3(uv.x, uv.y, -1.0);
     vec3 dir = vec3(0.0, 0.0, 1.0);
-    float gsColor = simpleMarch(from, dir);
+
+    // Inverse to world pos
+    vec4 invRayOrigin = inverse(projectionMatrix * modelViewMatrix) * vec4(rayOrigin, 1.0);
+    vec4 invDir = inverse(projectionMatrix * modelViewMatrix) * vec4(dir, 1.0);
+    //float gsColor = simpleMarch(invRayOrigin.xyz, invDir.xyz);
+
+    // Rays from vertex between near and far planes
+    vec3 newVertRayOrigin = vertRayOrigin;
+    newVertRayOrigin.z -= fragTime * 0.1;
+    //float gsColor = simpleMarch(newVertRayOrigin, vertRayDirection);
+
+
+    vec3 rayEyeOrigin = eyePos;
+    //rayEyeOrigin.z -= fragTime * 0.1;
+    vec3 rayEyeDir = vec3(uv, 0.0) - rayEyeOrigin;
+    float gsColor = simpleMarch(rayEyeOrigin, vertRayDirection);
+
+    // DEBUG: Check frag pos
+    //if (uv.x <= 0.5) {
+    //    outColor = vec4(1.0);
+    //    return;
+    //} else if (uv.x > 0.5) {
+    //    outColor = vec4(0.0);
+    //    return;
+    //}
 
     //outColor = vec4(uv.x * sin(fragTime), 0.5, uv.y * sin(fragTime), 1.0);
     outColor = vec4(vec3(gsColor), 1.0);
-
-    // Test frag pos
-    //if (uv.y <= 0.5) {
-    //    outColor = vec4(1.0);
-    //} else if (uv.y > 0.5) {
-    //    outColor = vec4(vec3(0.0), 1.0);
-    //}
-
 }
