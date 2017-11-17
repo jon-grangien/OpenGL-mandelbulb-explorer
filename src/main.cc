@@ -65,7 +65,7 @@ const GLfloat quadArray[4][2] = {
 mat4x2 quad = glm::make_mat4x2(&quadArray[0][0]);
 mat4 modelViewMatrix = quad * viewMatrix;
 
-mat4 inverseMVP = glm::inverse(modelViewMatrix) * glm::inverse(projectionMatrix);
+mat4 inverseMVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
 
 GLfloat currentTime = 0.0;
 GLfloat screenRatio;
@@ -171,7 +171,7 @@ int main(int argc,  char* argv[]) {
       eye = vec3(x, y, z);
       viewMatrix = glm::lookAt(eye, center, up);
       modelViewMatrix = quad * viewMatrix;
-      inverseMVP = glm::inverse(modelViewMatrix) * glm::inverse(projectionMatrix);
+      inverseMVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
 
       shouldUpdateCoordinates = false;
     }
@@ -241,7 +241,7 @@ void resize(GLFWwindow* win, int w, int h) {
   screenSize.y = (GLfloat) h;
   screenRatio = screenSize.x / screenSize.y;
   projectionMatrix = glm::perspective(90.0f, screenRatio, 0.1f, 100.0f);
-  inverseMVP = glm::inverse(modelViewMatrix) * glm::inverse(projectionMatrix);
+  inverseMVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
 }
 
 void onClose(GLFWwindow* win) {
