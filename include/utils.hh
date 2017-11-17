@@ -158,14 +158,16 @@ GLuint loadShaders(const char *vertFileName, const char *fragFileName) {
 }
 
 void showUsage() {
-  std::cerr << "Usage: ./mandelbulb -g 1\n"
+  std::cerr << "Usage: ./mandelbulb -p -g 1\n"
             << "Options:\n"
-            << "\t-h,--help\tShow this help message\n"
-            << "\t-g,--graphics \tSpecify graphics setting: 0 low, 1 medium, 2 high"
+            << "\t-h,--help\t\tShow this message\n"
+            << "\t-g,--graphics \t\tSpecify graphics setting: 0 low, 1 medium (default), 2 high\n"
+            << "\t-p,--performance \tLog performance measures every frame during run\n"
+            << "\t-c,--coordinates \tLog coordinates every frame during run\n"
             << std::endl;
 }
 
-int handleArgs(int c, char* argv[], int &graphicsSetting) {
+int handleArgs(int c, char* argv[], int &graphicsSetting, bool &logPerformance, bool &logCoordinates) {
   for (int i = 1; i < c; ++i) {
     std::string arg = argv[i];
 
@@ -173,16 +175,20 @@ int handleArgs(int c, char* argv[], int &graphicsSetting) {
       showUsage();
       return -1;
     } else if (arg == "-g" || arg == "--graphics") {
-      if (atoi(argv[i+1]) == 0) {
+      if (atoi(argv[i + 1]) == 0) {
         graphicsSetting = 0;
-      } else if (atoi(argv[i+1]) == 1) {
+      } else if (atoi(argv[i + 1]) == 1) {
         graphicsSetting = 1;
-      } else if (atoi(argv[i+1]) == 2) {
+      } else if (atoi(argv[i + 1]) == 2) {
         graphicsSetting = 2;
       } else {
         showUsage();
         return -1;
       }
+    } else if (arg == "-p" || arg == "--performance") {
+      logPerformance = true;
+    } else if (arg == "-c" || arg == "--coordinates") {
+      logCoordinates = true;
     }
   }
   return 0;

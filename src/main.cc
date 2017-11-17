@@ -1,18 +1,23 @@
 #include <iostream>
-#include <utils.hh>
+#include "utils.hh"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
-#include <types.hh>
+#include "types.hh"
 #include <GLFW/glfw3.h>
 
 // Declarations
 bool initGlfw();
 void onClose(GLFWwindow* win);
 void resize(GLFWwindow* win, GLsizei w, GLsizei h);
+void sphericalToCartesian(float r, float theta, float phi, float &x, float &y, float &z);
 void processInput(GLFWwindow *window);
 void error_callback(int error, const char* description);
 
 // Constants
+#define PI   3.14159265358979323846f
+#define PI_2 1.57079632679f
+#define TWO_PI 6.28318530718f
+
 float STEP_SIZE = 0.001f;
 int WIN_WIDTH = 640;
 int WIN_HEIGHT = WIN_WIDTH;
@@ -24,13 +29,22 @@ float mandelIters = 15;
 float bailLimit = 2.5;
 float power = 8.0;
 
+// App state
+bool logPerformance = false;
+bool logCoordinates = false;
+
 GLuint shader;
 GLuint vbo, vao;
 GLFWwindow* window;
 mat4 projectionMatrix = glm::perspective(90.0f, (GLfloat) WIN_WIDTH / (GLfloat) WIN_HEIGHT, 0.1f, 100.0f);
 
+// Spherical coordinates for eye pos
+float r = -1.5f;
+float theta = 0.0f;
+float phi = 0.0f;
+
 // View matrix set up with glm
-vec3 eye = vec3(0.0f, 0.0f, -1.0f);
+vec3 eye = vec3(0.0f, 0.0f, 1.0f);
 vec3 center = vec3(0.0f, 0.0f, 0.0f);
 vec3 up = vec3(0.0f, 1.0f, 0.0f);
 mat4 viewMatrix = glm::lookAt(eye, center, up);
@@ -60,7 +74,7 @@ int main(int argc,  char* argv[]) {
 
   // Handle args
   int graphicsSetting = 1;
-  int OK = utils::handleArgs(argc, argv, graphicsSetting);
+  int OK = utils::handleArgs(argc, argv, graphicsSetting, logPerformance, logCoordinates);
   if (OK < 0) return -1;
 
   switch(graphicsSetting) {
@@ -117,22 +131,44 @@ int main(int argc,  char* argv[]) {
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
-
     currentTime = (float) glfwGetTime();
-    nbFrames++;
 
-    if ( currentTime - lastTime >= 1.0 ) {
-      printf("\r%.1f ms/frame, %i FPS", 1000.0 / double(nbFrames), nbFrames);
+    if (logPerformance && logCoordinates) {
+      nbFrames++;
+      if (currentTime - lastTime >= 1.0) {
+        printf("\r%.1f ms/frame, %i FPS, r: %.1f, theta: %.1f, phi: %.1f",
+               1000.0 / double(nbFrames),
+               nbFrames,
+               r,
+               theta,
+               phi);
+        fflush(stdout);
+        nbFrames = 0;
+        lastTime += 1.0;
+      }
+    } else if (logPerformance) {
+      nbFrames++;
+
+      if (currentTime - lastTime >= 1.0) {
+        printf("\r%.1f ms/frame, %i FPS", 1000.0 / double(nbFrames), nbFrames);
+        fflush(stdout);
+        nbFrames = 0;
+        lastTime += 1.0;
+      }
+    } else if (logCoordinates) {
+      printf("\rr: %.1f, theta: %.1f, phi: %.1f", r, theta, phi);
       fflush(stdout);
-      nbFrames = 0;
-      lastTime += 1.0;
     }
 
-    float timeFactor = 0.3f * currentTime;
-    eye.x = 0.2f * cosf(timeFactor);
-    eye.y = 0.2f * sinf(timeFactor);
-    eye.z = -1.5f + 0.1f * sinf(timeFactor);
+  //  float timeFactor = 0.3f * currentTime;
+  //  eye.x = 0.2f * cosf(timeFactor);
+  //  eye.y = 0.2f * sinf(timeFactor);
+  //  eye.z = -1.5f + 0.1f * sinf(timeFactor);
+    float x = 0.0f, y = 0.0f, z = 0.0f;
+    sphericalToCartesian(r, theta, phi, x, y, z);
+    eye = vec3(x, y, z);
     viewMatrix = glm::lookAt(eye, center, up);
+    modelViewMatrix = quad * viewMatrix;
     inverseMVP = glm::inverse(modelViewMatrix) * glm::inverse(projectionMatrix);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -218,6 +254,42 @@ void processInput(GLFWwindow *window) {
   // Reload shader
   if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
     shader = utils::loadShaders("../shaders/mandel_raymarch.vert" , "../shaders/mandel_raymarch.frag");
+
+  // Movement
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    theta -= 0.1f;
+    theta = std::max(0.0f, theta);
+    theta = std::min(PI, theta);
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    phi -= 0.1f;
+    phi = std::max(0.0f, phi);
+    phi = std::min(TWO_PI, phi);
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    theta += 0.1f;
+    theta = std::max(0.0f, theta);
+    theta = std::min(PI, theta);
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    phi += 0.1f;
+    phi = std::max(0.0f, phi);
+    phi = std::min(TWO_PI, phi);
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+    r -= 0.1f;
+  if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+    r += 0.1f;
+}
+
+void sphericalToCartesian(float r, float theta, float phi, float &x, float &y, float &z) {
+  x = r * sinf(theta) * cosf(phi);
+  y = r * sinf(theta) * sinf(phi);
+  z = r * cosf(theta);
 }
 
 void error_callback(int error, const char* description) {
