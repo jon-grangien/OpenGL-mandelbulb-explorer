@@ -1,23 +1,17 @@
 #version 330 core
 
-in vec2 fragPos;
-in float fragTime;
-
 in vec3 vertRayOrigin;
 in vec3 vertRayDirection;
 
-uniform mat4 projectionMatrix;
-uniform mat4 modelViewMatrix;
-uniform float time;
-uniform float screenRatio;
-uniform vec2 screenSize;
-uniform vec3 eyePos;
+uniform float u_time;
+uniform float u_screenRatio;
+uniform vec2 u_screenSize;
 
-uniform float maxRaySteps;
-uniform float minDistance;
-uniform float mandelIters;
-uniform float bailLimit;
-uniform float power;
+uniform float u_maxRaySteps;
+uniform float u_minDistance;
+uniform float u_mandelIters;
+uniform float u_bailLimit;
+uniform float u_power;
 
 out vec4 outColor;
 
@@ -37,7 +31,7 @@ float DERecTetra(vec3 p) {
 	int n = 0;
 	float dist, d;
 	vec3 z;
-	while (n < maxRaySteps) {
+	while (n < u_maxRaySteps) {
 		 c = a1; dist = length(z-a1);
 	        d = length(z-a2); if (d < dist) { c = a2; dist=d; }
 		 d = length(z-a3); if (d < dist) { c = a3; dist=d; }
@@ -53,19 +47,19 @@ float DEMandelBulb(vec3 pos) {
 	vec3 z = pos;
 	float dr = 1.0;
 	float r = 0.0;
-	for (int i = 0; i < mandelIters ; i++) {
+	for (int i = 0; i < u_mandelIters ; i++) {
 		r = length(z);
-		if (r > bailLimit) break;
+		if (r > u_bailLimit) break;
 
 		// convert to polar coordinates
 		float theta = acos(z.z/r);
 		float phi = atan(z.y,z.x);
-		dr = pow(r, power-1.0)*power*dr + 1.0;
+		dr = pow(r, u_power-1.0)*u_power*dr + 1.0;
 
 		// scale and rotate the point
-		float zr = pow(r,power);
-		theta = theta*power;
-		phi = phi*power;
+		float zr = pow(r,u_power);
+		theta = theta*u_power;
+		phi = phi*u_power;
 
 		// convert back to cartesian coordinates
 		z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
@@ -79,15 +73,15 @@ float simpleMarch(vec3 from, vec3 dir) {
 	float totalDistance = 0.0;
 	int steps;
 
-	for (steps=0; steps < maxRaySteps; steps++) {
+	for (steps=0; steps < u_maxRaySteps; steps++) {
 		vec3 p = from + totalDistance * dir;
 		float distance = DEMandelBulb(p);
 		totalDistance += distance;
 
-		if (distance < minDistance)
+		if (distance < u_minDistance)
             break;
 	}
-	return (1.0 - float(steps) / float(maxRaySteps)); // greyscale val based on amount steps
+	return (1.0 - float(steps) / float(u_maxRaySteps)); // greyscale val based on amount steps
 }
 
 void main() {

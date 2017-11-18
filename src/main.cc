@@ -66,7 +66,7 @@ const GLfloat quadArray[4][2] = {
 mat4x2 quad = glm::make_mat4x2(&quadArray[0][0]);
 mat4 modelViewMatrix = quad * viewMatrix;
 
-mat4 inverseMVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
+mat4 inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
 
 GLfloat currentTime = 0.0;
 GLfloat screenRatio;
@@ -169,7 +169,7 @@ int main(int argc,  char* argv[]) {
       sphericalToCartesian(r, theta, phi, x, y, z);
       eye = vec3(x, y, z);
       viewMatrix = glm::lookAt(eye, center, up);
-      inverseMVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
+      inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
 
       shouldUpdateCoordinates = false;
     }
@@ -179,24 +179,20 @@ int main(int argc,  char* argv[]) {
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     glUseProgram(shader);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-    glUniformMatrix4fv(glGetUniformLocation(shader, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
-    glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
-    glUniformMatrix4fv(glGetUniformLocation(shader, "inverseMVP"), 1, GL_FALSE, glm::value_ptr(inverseMVP));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "u_inverseVP"), 1, GL_FALSE, glm::value_ptr(inverseVP));
     glUniform1fv(glGetUniformLocation(shader, "u_nearPlane"), 1, &NEAR_PLANE);
     glUniform1fv(glGetUniformLocation(shader, "u_farPlane"), 1, &FAR_PLANE);
-    glUniform1fv(glGetUniformLocation(shader, "time"), 1, &currentTime);
-    glUniform1fv(glGetUniformLocation(shader, "screenRatio"), 1, &screenRatio);
-    glUniform2fv(glGetUniformLocation(shader, "screenSize"), 1, glm::value_ptr(screenSize));
-    glUniform1fv(glGetUniformLocation(shader, "stepSize"), 1, &STEP_SIZE);
-    glUniform3fv(glGetUniformLocation(shader, "eyePos"), 1, glm::value_ptr(eye));
+    glUniform1fv(glGetUniformLocation(shader, "u_time"), 1, &currentTime);
+    glUniform1fv(glGetUniformLocation(shader, "u_screenRatio"), 1, &screenRatio);
+    glUniform2fv(glGetUniformLocation(shader, "u_screenSize"), 1, glm::value_ptr(screenSize));
+    glUniform1fv(glGetUniformLocation(shader, "u_stepSize"), 1, &STEP_SIZE);
 
     // Mandel setup
-    glUniform1fv(glGetUniformLocation(shader, "maxRaySteps"), 1, &maxRaySteps);
-    glUniform1fv(glGetUniformLocation(shader, "minDistance"), 1, &minDistance);
-    glUniform1fv(glGetUniformLocation(shader, "mandelIters"), 1, &mandelIters);
-    glUniform1fv(glGetUniformLocation(shader, "bailLimit"), 1, &bailLimit);
-    glUniform1fv(glGetUniformLocation(shader, "power"), 1, &power);
+    glUniform1fv(glGetUniformLocation(shader, "u_maxRaySteps"), 1, &maxRaySteps);
+    glUniform1fv(glGetUniformLocation(shader, "u_minDistance"), 1, &minDistance);
+    glUniform1fv(glGetUniformLocation(shader, "u_mandelIters"), 1, &mandelIters);
+    glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &bailLimit);
+    glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &power);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -242,7 +238,7 @@ void resize(GLFWwindow* win, int w, int h) {
   screenSize.y = (GLfloat) h;
   screenRatio = screenSize.x / screenSize.y;
   projectionMatrix = glm::perspective(90.0f, screenRatio, NEAR_PLANE, FAR_PLANE);
-  inverseMVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
+  inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
 }
 
 void onClose(GLFWwindow* win) {
