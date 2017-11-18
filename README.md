@@ -10,6 +10,14 @@ Options:
 	-p,--performance 	Log performance measures every frame during run
 	-c,--coordinates 	Log coordinates every frame during run
 
+Controls:
+	Q 	Quit the program
+	L 	Reload shaders
+	WASD 	Movement around center
+	Z 	Zoom out
+	X 	Zoom in
+	R 	Reset position
+
 ```
 
 ## Environment

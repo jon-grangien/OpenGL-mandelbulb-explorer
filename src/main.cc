@@ -21,6 +21,11 @@ void error_callback(int error, const char* description);
 float STEP_SIZE = 0.001f;
 int WIN_WIDTH = 640;
 int WIN_HEIGHT = WIN_WIDTH;
+float NEAR_PLANE = 0.1f;
+float FAR_PLANE = 100.0f;
+float COORDINATES_STEP = 0.005f;
+float COORDINATES_STEP_HALF = 0.0025f;
+float COORDINATES_STEP_DOUBLE = 0.01f;
 
 // Arg variables
 float maxRaySteps = 700.0;
@@ -32,17 +37,19 @@ float power = 8.0;
 // App state
 bool logPerformance = false;
 bool logCoordinates = false;
-bool shouldUpdateCoordinates = false;
+bool shouldUpdateCoordinates = true; // True initially to first set spherical to cartesian
 
 GLuint shader;
 GLuint vbo, vao;
 GLFWwindow* window;
-mat4 projectionMatrix = glm::perspective(90.0f, (GLfloat) WIN_WIDTH / (GLfloat) WIN_HEIGHT, 0.1f, 100.0f);
+mat4 projectionMatrix = glm::perspective(90.0f, (GLfloat) WIN_WIDTH / (GLfloat) WIN_HEIGHT, NEAR_PLANE, FAR_PLANE);
 
-// Spherical coordinates for eye pos
-float r = -1.5f;
-float theta = 0.0f;
-float phi = 0.0f;
+// Coordinates for eye pos
+float defaultR = 1.3f, defaultTheta = 0.0f, defaultPhi = 0.0f;
+float r = defaultR;
+float theta = defaultTheta;
+float phi = defaultPhi;
+float x = 0.0f, y = 0.0f, z = 0.0f;
 
 // View matrix set up with glm
 vec3 eye = vec3(0.0f, 0.0f, 1.0f);
@@ -56,12 +63,6 @@ const GLfloat quadArray[4][2] = {
   { -1.0f, 1.0f  },
   { 1.0f,  1.0f  }
 };
-//const GLfloat quadArray[4][2] = {
-//    { 0.0f, 0.0f  },
-//    {  0.5f, 0.0f  },
-//    { 0.0f, 0.5f  },
-//    { 0.5f,  0.5f  }
-//};
 mat4x2 quad = glm::make_mat4x2(&quadArray[0][0]);
 mat4 modelViewMatrix = quad * viewMatrix;
 
@@ -90,18 +91,21 @@ int main(int argc,  char* argv[]) {
     default:
       break;
     case 2:
-      maxRaySteps = 1200.0;
+      maxRaySteps = 1300.0;
       minDistance = 0.0001;
-      mandelIters = 20;
+      mandelIters = 30;
       bailLimit = 2.5;
       power = 8.0;
       break;
   }
 
-  std::cout << "Graphics option is set to " << graphicsSetting << std::endl << std::endl;
   std::cout << "Keys:\n";
   std::cout << "Q: Quit\n";
-  std::cout << "R: Reload shader files\n";
+  std::cout << "L: Reload shader files\n";
+  std::cout << "WASD: Movement around center\n";
+  std::cout << "Z: Zoom out\n";
+  std::cout << "X: Zoom in\n";
+  std::cout << "R: Reset position\n";
 
   auto glfwOk = initGlfw();
   auto err = glewInit();
@@ -157,20 +161,14 @@ int main(int argc,  char* argv[]) {
         lastTime += 1.0;
       }
     } else if (logCoordinates) {
-      printf("\rr: %.1f, theta: %.1f, phi: %.1f", r, theta, phi);
+      printf("\nr: %.1f, theta: %.1f, phi: %.1f and x: %.1f, y: %.1f, z: %.1f", r, theta, phi, x, y, z);
       fflush(stdout);
     }
 
-  //  float timeFactor = 0.3f * currentTime;
-  //  eye.x = 0.2f * cosf(timeFactor);
-  //  eye.y = 0.2f * sinf(timeFactor);
-  //  eye.z = -1.5f + 0.1f * sinf(timeFactor);
     if (shouldUpdateCoordinates) {
-      float x = 0.0f, y = 0.0f, z = 0.0f;
       sphericalToCartesian(r, theta, phi, x, y, z);
       eye = vec3(x, y, z);
       viewMatrix = glm::lookAt(eye, center, up);
-      modelViewMatrix = quad * viewMatrix;
       inverseMVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
 
       shouldUpdateCoordinates = false;
@@ -182,8 +180,11 @@ int main(int argc,  char* argv[]) {
 
     glUseProgram(shader);
     glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(glGetUniformLocation(shader, "modelViewMatrix"), 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
     glUniformMatrix4fv(glGetUniformLocation(shader, "inverseMVP"), 1, GL_FALSE, glm::value_ptr(inverseMVP));
+    glUniform1fv(glGetUniformLocation(shader, "u_nearPlane"), 1, &NEAR_PLANE);
+    glUniform1fv(glGetUniformLocation(shader, "u_farPlane"), 1, &FAR_PLANE);
     glUniform1fv(glGetUniformLocation(shader, "time"), 1, &currentTime);
     glUniform1fv(glGetUniformLocation(shader, "screenRatio"), 1, &screenRatio);
     glUniform2fv(glGetUniformLocation(shader, "screenSize"), 1, glm::value_ptr(screenSize));
@@ -240,7 +241,7 @@ void resize(GLFWwindow* win, int w, int h) {
   screenSize.x = (GLfloat) w;
   screenSize.y = (GLfloat) h;
   screenRatio = screenSize.x / screenSize.y;
-  projectionMatrix = glm::perspective(90.0f, screenRatio, 0.1f, 100.0f);
+  projectionMatrix = glm::perspective(90.0f, screenRatio, NEAR_PLANE, FAR_PLANE);
   inverseMVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
 }
 
@@ -257,53 +258,61 @@ void processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, true);
 
   // Reload shader
-  if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+  if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
     shader = utils::loadShaders("../shaders/mandel_raymarch.vert" , "../shaders/mandel_raymarch.frag");
 
   // Movement
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    theta -= 0.1f;
+    theta -= COORDINATES_STEP;
     theta = std::max(0.0f, theta);
     theta = std::min(PI, theta);
   }
 
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    phi -= 0.1f;
+    phi -= COORDINATES_STEP_DOUBLE;
     phi = std::max(0.0f, phi);
     phi = std::min(TWO_PI, phi);
   }
 
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    theta += 0.1f;
+    theta += COORDINATES_STEP;
     theta = std::max(0.0f, theta);
     theta = std::min(PI, theta);
   }
 
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    phi += 0.1f;
+    phi += COORDINATES_STEP_DOUBLE;
     phi = std::max(0.0f, phi);
     phi = std::min(TWO_PI, phi);
   }
 
   if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    r -= 0.1f;
+    r -= COORDINATES_STEP_HALF;
   }
 
   if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    r += 0.1f;
+    r += COORDINATES_STEP_HALF;
+  }
+
+  // Reset camera
+  if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+    shouldUpdateCoordinates = true;
+    r = defaultR;
+    theta = defaultTheta;
+    phi = defaultPhi;
   }
 }
 
 void sphericalToCartesian(float r, float theta, float phi, float &x, float &y, float &z) {
   x = r * sinf(theta) * cosf(phi);
-  z = r * sinf(theta) * sinf(phi);
-  y = r * cosf(theta); // y instead as we define it as up
+  y = r * sinf(theta) * sinf(phi);
+  z = r * cosf(theta);
 }
 
 void error_callback(int error, const char* description) {

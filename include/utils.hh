@@ -163,7 +163,14 @@ void showUsage() {
             << "\t-h,--help\t\tShow this message\n"
             << "\t-g,--graphics \t\tSpecify graphics setting: 0 low, 1 medium (default), 2 high\n"
             << "\t-p,--performance \tLog performance measures every frame during run\n"
-            << "\t-c,--coordinates \tLog coordinates every frame during run\n"
+            << "\t-c,--coordinates \tLog coordinates every frame during run\n\n"
+            << "Controls:\n"
+            << "\tQ \tQuit the program\n"
+            << "\tL \tReload shaders\n"
+            << "\tWASD \tMovement around center\n"
+            << "\tZ \tZoom out\n"
+            << "\tX \tZoom in\n"
+            << "\tR \tReset position\n"
             << std::endl;
 }
 
