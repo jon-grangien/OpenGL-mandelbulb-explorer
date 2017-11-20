@@ -81,11 +81,11 @@ int main(int argc,  char* argv[]) {
 
   switch(graphicsSetting) {
     case 0:
-      maxRaySteps = 500.0;
-      minDistance = 0.01;
+      maxRaySteps = 250.0;
+      minDistance = 0.005;
       mandelIters = 5;
       bailLimit = 2.5;
-      power = 4.0;
+      power = 6.0;
       break;
     case 1:
     default:
