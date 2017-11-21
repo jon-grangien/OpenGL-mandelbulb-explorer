@@ -28,10 +28,10 @@ float COORDINATES_STEP_HALF = 0.0025f;
 float COORDINATES_STEP_DOUBLE = 0.01f;
 
 // Arg variables
-float maxRaySteps = 700.0;
-float minDistance = 0.0001;
-float mandelIters = 15;
-float bailLimit = 2.5;
+float maxRaySteps = 900.0;
+float minDistance = 0.000001;
+float mandelIters = 600;
+float bailLimit = 8.0;
 float power = 8.0;
 
 // App state
@@ -81,10 +81,10 @@ int main(int argc,  char* argv[]) {
 
   switch(graphicsSetting) {
     case 0:
-      maxRaySteps = 250.0;
-      minDistance = 0.005;
-      mandelIters = 5;
-      bailLimit = 2.5;
+      maxRaySteps = 300.0;
+      minDistance = 0.0005;
+      mandelIters = 400;
+      bailLimit = 5.0;
       power = 6.0;
       break;
     case 1:
@@ -92,9 +92,9 @@ int main(int argc,  char* argv[]) {
       break;
     case 2:
       maxRaySteps = 1300.0;
-      minDistance = 0.0001;
-      mandelIters = 30;
-      bailLimit = 2.5;
+      minDistance = 0.0000001;
+      mandelIters = 900;
+      bailLimit = 10.0;
       power = 8.0;
       break;
   }
@@ -167,7 +167,7 @@ int main(int argc,  char* argv[]) {
 
     if (shouldUpdateCoordinates) {
       sphericalToCartesian(r, theta, phi, x, y, z);
-      eye = vec3(x, y, z);
+      eye = vec3(y, x, z);
       viewMatrix = glm::lookAt(eye, center, up);
       inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
 
