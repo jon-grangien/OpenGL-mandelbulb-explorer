@@ -30,7 +30,7 @@ float COORDINATES_STEP_DOUBLE = 0.01f;
 // Arg variables
 float maxRaySteps = 1000.0;
 float minDistance = 0.000001;
-float mandelIters = 600;
+float mandelIters = 1800;
 float bailLimit = 8.0;
 float power = 8.0;
 
@@ -83,7 +83,7 @@ int main(int argc,  char* argv[]) {
     case 0:
       maxRaySteps = 600.0;
       minDistance = 0.0005;
-      mandelIters = 400;
+      mandelIters = 1400;
       bailLimit = 5.0;
       power = 6.0;
       break;
@@ -93,7 +93,7 @@ int main(int argc,  char* argv[]) {
     case 2:
       maxRaySteps = 1500.0;
       minDistance = 0.0000001;
-      mandelIters = 900;
+      mandelIters = 2300;
       bailLimit = 10.0;
       power = 8.0;
       break;
