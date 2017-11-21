@@ -19,7 +19,7 @@ out vec4 outColor;
 #define SCALE 0.5
 #define LOW_P_ZERO 0.00001
 
-vec3 glowColor = vec3(0.9, 0.75, 1.0);
+vec3 glowColor = vec3(0.75, 0.9, 1.0);
 
 float DESphere(vec3 p) {
     return length(p) - SPHERE_R;
@@ -125,7 +125,7 @@ void main() {
 
     // Mix some red
     } else if (gsColor > 0.3) {
-      outColor = vec4(mix(vec3(1.0, 0.2, 0.2), vec3(1.0), gsColor), 1.0);
+      outColor = vec4(mix(vec3(0.2, 0.2, 1.0), vec3(1.0), gsColor), 1.0);
       return;
 
     // Fog applied
