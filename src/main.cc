@@ -28,7 +28,7 @@ float COORDINATES_STEP_HALF = 0.0025f;
 float COORDINATES_STEP_DOUBLE = 0.01f;
 
 // Arg variables
-float maxRaySteps = 900.0;
+float maxRaySteps = 1000.0;
 float minDistance = 0.000001;
 float mandelIters = 600;
 float bailLimit = 8.0;
@@ -81,7 +81,7 @@ int main(int argc,  char* argv[]) {
 
   switch(graphicsSetting) {
     case 0:
-      maxRaySteps = 400.0;
+      maxRaySteps = 600.0;
       minDistance = 0.0005;
       mandelIters = 400;
       bailLimit = 5.0;
@@ -91,7 +91,7 @@ int main(int argc,  char* argv[]) {
     default:
       break;
     case 2:
-      maxRaySteps = 1300.0;
+      maxRaySteps = 1500.0;
       minDistance = 0.0000001;
       mandelIters = 900;
       bailLimit = 10.0;
