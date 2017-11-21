@@ -17,6 +17,9 @@ out vec4 outColor;
 
 #define SPHERE_R 0.9
 #define SCALE 0.5
+#define LOW_P_ZERO 0.00001
+
+vec3 glowColor = vec3(0.9, 0.75, 1.0);
 
 float DESphere(vec3 p) {
     return length(p) - SPHERE_R;
@@ -69,7 +72,7 @@ float DEMandelBulb(vec3 pos) {
 }
 
 // March with distance estimate and return grayscale value
-float simpleMarch(vec3 from, vec3 dir) {
+float simpleMarch(vec3 from, vec3 dir, out int stepsTaken) {
 	float totalDistance = 0.0;
 	int steps;
 
@@ -81,6 +84,8 @@ float simpleMarch(vec3 from, vec3 dir) {
 		if (distance < u_minDistance)
             break;
 	}
+
+	stepsTaken = steps;
 	return (1.0 - float(steps) / float(u_maxRaySteps)); // greyscale val based on amount steps
 }
 
@@ -92,7 +97,8 @@ void main() {
     //                        DE(pos+yDir)-DE(pos-yDir),
     //                        DE(pos+zDir)-DE(pos-zDir)));
 
-    float gsColor = simpleMarch(vertRayOrigin, vertRayDirection);
+    int stepsTaken = 0;
+    float gsColor = simpleMarch(vertRayOrigin, vertRayDirection, stepsTaken);
 
     // DEBUG: Check frag pos
     //if (uv.x <= 0.5) {
@@ -103,5 +109,11 @@ void main() {
     //    return;
     //}
 
-    outColor = vec4(vec3(gsColor), 1.0);
+    // Ray miss; bg plane color
+    if (gsColor < LOW_P_ZERO) {
+      outColor = vec4(1.0);
+      return;
+    }
+
+    outColor = vec4(mix(glowColor, vec3(gsColor), gsColor), 1.0);
 }
