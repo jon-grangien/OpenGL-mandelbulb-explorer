@@ -26,7 +26,8 @@ endif ()
 
 set(CMAKE_CXX_STANDARD 14)
 
-file(GLOB SOURCE_FILES src/*.cc)
+set(IMGUI_SOURCE_DIR "ext/imgui")
+# add_subdirectory(${IMGUI_SOURCE_DIR})
 
 set(GLFW_SOURCE_DIR "ext/glfw")
 
@@ -43,7 +44,8 @@ set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include
         ${GLFW_SOURCE_DIR}/deps
         ${OPENGL_INCLUDE_DIR}
         ${GLEW_INCLUDE_DIRS}
-        ${GLM_INCLUDE_DIR} )
+        ${GLM_INCLUDE_DIR}
+        ${IMGUI_SOURCE_DIR} )
 
 if (APPLE)
     find_package(X11)
@@ -56,6 +58,8 @@ if (APPLE)
 else ()
     set(EXTRA_LIBRARIES ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} ${GLEW_LIBRARIES} X11 m)
 endif ()
+
+file(GLOB SOURCE_FILES src/*.cc ${IMGUI_SOURCE_DIR}/*.cpp)
 
 include_directories(${INCLUDE_DIRS})
 

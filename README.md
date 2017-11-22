@@ -28,11 +28,12 @@ Built for Linux and tested on Arch Linux. Mac support limitedly implemented. Win
 - GLFW (included submodule)
 - GLEW
 - GLM
+- imgui (included submodule)
 
-To install the applied version of GLFW, clone the repository recursively
+To get the applied versions of GLFW and imgui, *clone this repository recursively*
 
 ```sh
-git clone <this-repo> --recursive
+git clone git@github.com:codingInSpace/OpenGL-mandelbulb-explorer.git --recursive
 ```
 
 GLFW needs to be built for the hardware:
@@ -42,7 +43,7 @@ cmake .
 make
 ```
 
-If you didn't clone the repo recursively you can get the submodule like this:
+If you didn't clone the repo recursively you can get the submodules like this:
 ```sh
 git submodule update --init --recursive
 ```

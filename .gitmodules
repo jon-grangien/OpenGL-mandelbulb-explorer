@@ -2,3 +2,6 @@
 	path = ext/glfw
 	url = git@github.com:glfw/glfw.git
 	ignore = dirty
+[submodule "ext/imgui"]
+	path = ext/imgui
+	url = git@github.com:ocornut/imgui.git
