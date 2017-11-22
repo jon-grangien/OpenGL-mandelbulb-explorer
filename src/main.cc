@@ -7,11 +7,11 @@
 
 // Declarations
 bool initGlfw();
-void onClose(GLFWwindow* win);
-void resize(GLFWwindow* win, GLsizei w, GLsizei h);
+void onClose(GLFWwindow *win);
+void resize(GLFWwindow *win, GLsizei w, GLsizei h);
 void sphericalToCartesian(float r, float theta, float phi, float &x, float &y, float &z);
 void processInput(GLFWwindow *window);
-void error_callback(int error, const char* description);
+void error_callback(int error, const char *description);
 
 // Constants
 #define PI   3.14159265358979323846f
@@ -41,7 +41,7 @@ bool shouldUpdateCoordinates = true; // True initially to first set spherical to
 
 GLuint shader;
 GLuint vbo, vao;
-GLFWwindow* window;
+GLFWwindow *window;
 mat4 projectionMatrix = glm::perspective(90.0f, (GLfloat) WIN_WIDTH / (GLfloat) WIN_HEIGHT, NEAR_PLANE, FAR_PLANE);
 
 // Coordinates for eye pos
@@ -58,10 +58,10 @@ vec3 up = vec3(0.0f, 1.0f, 0.0f);
 mat4 viewMatrix = glm::lookAt(eye, center, up);
 
 const GLfloat quadArray[4][2] = {
-  { -1.0f, -1.0f  },
-  {  1.0f, -1.0f  },
-  { -1.0f, 1.0f  },
-  { 1.0f,  1.0f  }
+    {-1.0f, -1.0f},
+    {1.0f, -1.0f},
+    {-1.0f, 1.0f},
+    {1.0f, 1.0f}
 };
 mat4x2 quad = glm::make_mat4x2(&quadArray[0][0]);
 mat4 modelViewMatrix = quad * viewMatrix;
@@ -72,26 +72,23 @@ GLfloat currentTime = 0.0;
 GLfloat screenRatio;
 auto screenSize = vec2(0.0);
 
-int main(int argc,  char* argv[]) {
+int main(int argc, char *argv[]) {
 
   // Handle args
   int graphicsSetting = 1;
   int OK = utils::handleArgs(argc, argv, graphicsSetting, logPerformance, logCoordinates);
   if (OK < 0) return -1;
 
-  switch(graphicsSetting) {
-    case 0:
-      maxRaySteps = 600.0;
+  switch (graphicsSetting) {
+    case 0:maxRaySteps = 600.0;
       minDistance = 0.0005;
       mandelIters = 1400;
       bailLimit = 5.0;
       power = 6.0;
       break;
     case 1:
-    default:
-      break;
-    case 2:
-      maxRaySteps = 1500.0;
+    default:break;
+    case 2:maxRaySteps = 1500.0;
       minDistance = 0.0000001;
       mandelIters = 2300;
       bailLimit = 10.0;
@@ -99,13 +96,13 @@ int main(int argc,  char* argv[]) {
       break;
   }
 
-  std::cout << "Keys:\n";
-  std::cout << "Q: Quit\n";
-  std::cout << "L: Reload shader files\n";
-  std::cout << "WASD: Movement around center\n";
-  std::cout << "Z: Zoom out\n";
-  std::cout << "X: Zoom in\n";
-  std::cout << "R: Reset position\n";
+  std::cout << "Keys:\n"
+            << "Q: Quit\n"
+            << "L: Reload shader files\n"
+            << "WASD: Movement around center\n"
+            << "Z: Zoom out\n"
+            << "X: Zoom in\n"
+            << "R: Reset position\n";
 
   auto glfwOk = initGlfw();
   auto err = glewInit();
@@ -117,8 +114,8 @@ int main(int argc,  char* argv[]) {
 
   glDisable(GL_DEPTH_TEST);
 
-  shader = utils::loadShaders("../shaders/mandel_raymarch.vert" , "../shaders/mandel_raymarch.frag");
-  glGenVertexArrays(1,&vao);
+  shader = utils::loadShaders("../shaders/mandel_raymarch.vert", "../shaders/mandel_raymarch.frag");
+  glGenVertexArrays(1, &vao);
   glBindVertexArray(vao);
 
   glGenBuffers(1, &vbo);
@@ -231,7 +228,7 @@ bool initGlfw() {
   return true;
 }
 
-void resize(GLFWwindow* win, int w, int h) {
+void resize(GLFWwindow *win, int w, int h) {
   //std::cout << "\nresized to " << w << ", " << h << std::endl;
   glViewport(0, 0, w, h);
   screenSize.x = (GLfloat) w;
@@ -241,7 +238,7 @@ void resize(GLFWwindow* win, int w, int h) {
   inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
 }
 
-void onClose(GLFWwindow* win) {
+void onClose(GLFWwindow *win) {
   std::cout << "Window closed\n";
 }
 
@@ -255,7 +252,7 @@ void processInput(GLFWwindow *window) {
 
   // Reload shader
   if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-    shader = utils::loadShaders("../shaders/mandel_raymarch.vert" , "../shaders/mandel_raymarch.frag");
+    shader = utils::loadShaders("../shaders/mandel_raymarch.vert", "../shaders/mandel_raymarch.frag");
 
   // Movement
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -311,7 +308,7 @@ void sphericalToCartesian(float r, float theta, float phi, float &x, float &y, f
   z = r * cosf(theta);
 }
 
-void error_callback(int error, const char* description) {
+void error_callback(int error, const char *description) {
   fprintf(stderr, "Error: %s\n", description);
 }
 
