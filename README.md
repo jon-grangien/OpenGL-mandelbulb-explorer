@@ -1,8 +1,10 @@
 # Mandelbulb renderer
-Render the mandelbulb fractal patterns interactively, with shadow mapping and SSAO.
+Render the mandelbulb fractal patterns interactively, with PostFX.
+
+![screenshot](https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/purple_with_gui.png)
 
 ## Usage
-```bash
+```
 Usage: ./mandelbulb -c
 Options:
 	-h,--help		Show this message
@@ -12,8 +14,8 @@ Controls:
 	Q 	Quit the program
 	L 	Reload shaders
 	WASD 	Movement around center
-	Z 	Zoom out
-	X 	Zoom in
+	Z 	Zoom in
+	X 	Zoom out
 	R 	Reset position
 
 ```
@@ -51,7 +53,7 @@ git submodule update --init --recursive
 cd build
 cmake ..
 make
-./mandelbulb -g 2
+./mandelbulb
 ```
 
 Or use CLion with working directory as build folder (run configurations, edit, set working directory)

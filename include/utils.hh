@@ -163,8 +163,8 @@ void showUsage() {
             << "\tQ \tQuit the program\n"
             << "\tL \tReload shaders\n"
             << "\tWASD \tMovement around center\n"
-            << "\tZ \tZoom out\n"
-            << "\tX \tZoom in\n"
+            << "\tZ \tZoom in\n"
+            << "\tX \tZoom out\n"
             << "\tR \tReset position\n"
             << std::endl;
 }
