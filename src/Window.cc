@@ -5,8 +5,8 @@
 #include "Window.hh"
 
 Window::~Window() {
-  ImGui_ImplGlfwGL3_Shutdown();
-  glfwDestroyWindow(window);
+  //ImGui_ImplGlfwGL3_Shutdown();
+  //glfwDestroyWindow(window);
 }
 
 bool Window::init(FrameBufferSizeCallback resizeCallback,
@@ -34,7 +34,7 @@ bool Window::init(FrameBufferSizeCallback resizeCallback,
     return false;
   }
 
-  ImGui_ImplGlfwGL3_Init(window, false);
+  ImGui_ImplGlfwGL3_Init(window, true);
 
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, resizeCallback);
@@ -45,6 +45,7 @@ bool Window::init(FrameBufferSizeCallback resizeCallback,
 
 void Window::display() {
   while (!glfwWindowShouldClose(window)) {
+    glfwPollEvents();
     ImGui_ImplGlfwGL3_NewFrame();
     inputFunc(window);
 
@@ -52,7 +53,6 @@ void Window::display() {
 
     ImGui::Render();
     glfwSwapBuffers(window);
-    glfwPollEvents();
   }
 
   glfwDestroyWindow(window);

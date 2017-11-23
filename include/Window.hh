@@ -13,10 +13,9 @@ class Window {
 
   ProcessInputFunc inputFunc;
   DisplayFunc displayFunc;
- public:
-  bool logPerformance = false, logCoordinates = false;
 
-  Window() = default;
+ public:
+  Window(unsigned int w, unsigned int h) : width(w), height(h) {};
   ~Window();
 
   bool init(FrameBufferSizeCallback resizeCallback,
@@ -24,6 +23,8 @@ class Window {
             DisplayFunc dispFunc);
   void display();
   GLFWwindow *getHandle() { return window; };
+  unsigned int getWidth() { return width; };
+  unsigned int getHeight() { return height; };
 
 };
 

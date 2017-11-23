@@ -16,12 +16,11 @@ void display();
 
 // Constants
 #define PI     3.14159265358979323846f
-#define PI_2   1.57079632679f
 #define TWO_PI 6.28318530718f
 
 float STEP_SIZE = 0.001f;
-int WIN_WIDTH = 640;
-int WIN_HEIGHT = WIN_WIDTH;
+unsigned int INITIAL_WIDTH = 800;
+unsigned int INITIAL_HEIGHT = 640;
 float NEAR_PLANE = 0.1f;
 float FAR_PLANE = 100.0f;
 float COORDINATES_STEP = 0.005f;
@@ -30,22 +29,27 @@ float COORDINATES_STEP_DOUBLE = 0.01f;
 
 // Arg variables
 float maxRaySteps = 1000.0;
-float minDistance = 0.000001;
-float mandelIters = 1800;
-float bailLimit = 8.0;
+float baseMinDistance = 0.00001;
+float minDistance = baseMinDistance;
+int minDistanceFactor = 0;
+float mandelIters = 1000;
+float bailLimit = 2.5;
 float power = 8.0;
 
 // App state
+auto windowAdapter = Window(INITIAL_WIDTH, INITIAL_HEIGHT);
 bool logPerformance = false;
 bool logCoordinates = false;
 bool shouldUpdateCoordinates = true; // True initially to first set spherical to cartesian
 int nbFrames = 0;
+int displayedFrames = 0;
+float displayedMS = 0;
 double lastTime = (float) glfwGetTime();
 
 GLuint shader;
 GLuint vbo, vao;
 GLFWwindow *window;
-mat4 projectionMatrix = glm::perspective(90.0f, (GLfloat) WIN_WIDTH / (GLfloat) WIN_HEIGHT, NEAR_PLANE, FAR_PLANE);
+mat4 projectionMatrix = glm::perspective(90.0f, (GLfloat) INITIAL_WIDTH / (GLfloat) INITIAL_HEIGHT, NEAR_PLANE, FAR_PLANE);
 
 // Coordinates for eye pos
 float defaultR = 1.3f, defaultTheta = 0.0f, defaultPhi = 0.0f;
@@ -77,29 +81,8 @@ auto screenSize = vec2(0.0);
 int main(int argc, char *argv[]) {
 
   // Handle args
-  int graphicsSetting = 1;
-  int OK = utils::handleArgs(argc, argv, graphicsSetting, logPerformance, logCoordinates);
+  int OK = utils::handleArgs(argc, argv, logCoordinates);
   if (OK < 0) return -1;
-
-  switch (graphicsSetting) {
-    case 0:
-      maxRaySteps = 600.0;
-      minDistance = 0.0005;
-      mandelIters = 1400;
-      bailLimit = 5.0;
-      power = 6.0;
-      break;
-    case 1:
-    default:
-      break;
-    case 2:
-      maxRaySteps = 1500.0;
-      minDistance = 0.0000001;
-      mandelIters = 2300;
-      bailLimit = 10.0;
-      power = 8.0;
-      break;
-  }
 
   std::cout << "Keys:\n"
             << "Q: Quit\n"
@@ -109,7 +92,6 @@ int main(int argc, char *argv[]) {
             << "X: Zoom in\n"
             << "R: Reset position\n";
 
-  auto windowAdapter = Window();
   auto glfwOk = windowAdapter.init(resizeCallback, processInput, display);
   auto err = glewInit();
 
@@ -143,31 +125,18 @@ int main(int argc, char *argv[]) {
 void display() {
   currentTime = (float) glfwGetTime();
 
-  if (logPerformance && logCoordinates) {
-    nbFrames++;
-    if (currentTime - lastTime >= 1.0) {
-      printf("\r%.1f ms/frame, %i FPS, r: %.1f, theta: %.1f, phi: %.1f",
-             1000.0 / double(nbFrames),
-             nbFrames,
-             r,
-             theta,
-             phi);
-      fflush(stdout);
-      nbFrames = 0;
-      lastTime += 1.0;
-    }
-  } else if (logPerformance) {
-    nbFrames++;
-
-    if (currentTime - lastTime >= 1.0) {
-      printf("\r%.1f ms/frame, %i FPS", 1000.0 / double(nbFrames), nbFrames);
-      fflush(stdout);
-      nbFrames = 0;
-      lastTime += 1.0;
-    }
-  } else if (logCoordinates) {
+  if (logCoordinates) {
     printf("\nr: %.1f, theta: %.1f, phi: %.1f and x: %.1f, y: %.1f, z: %.1f", r, theta, phi, x, y, z);
     fflush(stdout);
+  }
+
+  // Perfomance calculations
+  nbFrames++;
+  if (currentTime - lastTime >= 1.0) {
+    displayedMS = (float) 1000.0 / float(nbFrames);
+    displayedFrames = nbFrames;
+    nbFrames = 0;
+    lastTime += 1.0;
   }
 
   if (shouldUpdateCoordinates) {
@@ -179,7 +148,32 @@ void display() {
     shouldUpdateCoordinates = false;
   }
 
-  ImGui::Text("Hello, world!");
+  ImGui::SetNextWindowSize(ImVec2(350, 180));
+  ImGui::Begin("Settings");
+  ImGui::Text("Graphics values");
+  ImGui::SliderFloat("Max ray steps", &maxRaySteps, 1.0f, 3000.0f);
+  ImGui::SliderFloat("Mandel iters", &mandelIters, 0.0f, 3000.0f);
+  ImGui::SliderInt("Min dist factor", &minDistanceFactor, -5, 5);
+
+  if (minDistanceFactor < 0) {
+    minDistance = baseMinDistance / ((float)(pow(10.0, abs(minDistanceFactor))));
+  } else if (minDistanceFactor > 0) {
+    minDistance = baseMinDistance * ((float)(pow(10.0, minDistanceFactor)));
+  } else {
+    minDistance = baseMinDistance;
+  }
+
+  ImGui::SliderFloat("Power", &power, 0.0f, 32.0f);
+  ImGui::Separator();
+  ImGui::Value("Min dist", minDistance, "%.9f");
+  ImGui::End();
+
+  ImGui::SetNextWindowPos(ImVec2(0, windowAdapter.getHeight()), 0, ImVec2(0.0, 1.0));
+  ImGui::SetNextWindowSize(ImVec2(140, 80));
+  ImGui::Begin("State");
+  ImGui::Value("FPS", displayedFrames);
+  ImGui::Value("ms/frame", displayedMS);
+  ImGui::End();
 
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

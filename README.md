@@ -3,12 +3,10 @@ Render the mandelbulb fractal patterns interactively, with shadow mapping and SS
 
 ## Usage
 ```bash
-Usage: ./mandelbulb -p -g 1
+Usage: ./mandelbulb -c
 Options:
 	-h,--help		Show this message
-	-g,--graphics 		Specify graphics setting: 0 low, 1 medium (default), 2 high
-	-p,--performance 	Log performance measures every frame during run
-	-c,--coordinates 	Log coordinates every frame during run
+	-c,--coordinates 	Log coordinates in console every frame 
 
 Controls:
 	Q 	Quit the program
