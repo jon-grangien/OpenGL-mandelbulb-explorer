@@ -1,21 +1,21 @@
 #include <iostream>
+#include <GL/glew.h>
 #include "utils.hh"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "Window.hh"
 #include "types.hh"
+#include <imgui.h>
 #include <GLFW/glfw3.h>
 
 // Declarations
-bool initGlfw();
-void onClose(GLFWwindow *win);
-void resize(GLFWwindow *win, GLsizei w, GLsizei h);
 void sphericalToCartesian(float r, float theta, float phi, float &x, float &y, float &z);
+void resizeCallback(GLFWwindow *win, int w, int h);
 void processInput(GLFWwindow *window);
-void error_callback(int error, const char *description);
 
 // Constants
-#define PI   3.14159265358979323846f
-#define PI_2 1.57079632679f
+#define PI     3.14159265358979323846f
+#define PI_2   1.57079632679f
 #define TWO_PI 6.28318530718f
 
 float STEP_SIZE = 0.001f;
@@ -104,13 +104,16 @@ int main(int argc, char *argv[]) {
             << "X: Zoom in\n"
             << "R: Reset position\n";
 
-  auto glfwOk = initGlfw();
+  auto windowHandle = Window();
+  auto glfwOk = windowHandle.init(resizeCallback);
   auto err = glewInit();
 
   if (!glfwOk)
     return EXIT_FAILURE;
   if (err != GLEW_OK)
     std::cout << "Error: GLEW failed to init\n";
+
+  window = windowHandle.window;
 
   glDisable(GL_DEPTH_TEST);
 
@@ -171,6 +174,8 @@ int main(int argc, char *argv[]) {
       shouldUpdateCoordinates = false;
     }
 
+    //ImGui::Text("Hello, world!");
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -200,35 +205,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-bool initGlfw() {
-  if (!glfwInit())
-    std::cout << "Error: glfw failed to init\n";
-
-  glfwSetErrorCallback(error_callback);
-
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
-#endif
-
-  window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "Mandelbulb explorer", nullptr, nullptr);
-  if (!window) {
-    std::cout << "Error: glfw failed create window\n";
-    glfwTerminate();
-    return false;
-  }
-
-  glfwMakeContextCurrent(window);
-  glfwSetFramebufferSizeCallback(window, resize);
-  glfwSetWindowCloseCallback(window, onClose);
-  resize(window, WIN_WIDTH, WIN_HEIGHT);
-  return true;
-}
-
-void resize(GLFWwindow *win, int w, int h) {
+void resizeCallback(GLFWwindow *win, int w, int h) {
   //std::cout << "\nresized to " << w << ", " << h << std::endl;
   glViewport(0, 0, w, h);
   screenSize.x = (GLfloat) w;
@@ -236,10 +213,6 @@ void resize(GLFWwindow *win, int w, int h) {
   screenRatio = screenSize.x / screenSize.y;
   projectionMatrix = glm::perspective(90.0f, screenRatio, NEAR_PLANE, FAR_PLANE);
   inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
-}
-
-void onClose(GLFWwindow *win) {
-  std::cout << "Window closed\n";
 }
 
 void processInput(GLFWwindow *window) {
@@ -307,8 +280,3 @@ void sphericalToCartesian(float r, float theta, float phi, float &x, float &y, f
   y = r * sinf(theta) * sinf(phi);
   z = r * cosf(theta);
 }
-
-void error_callback(int error, const char *description) {
-  fprintf(stderr, "Error: %s\n", description);
-}
-
