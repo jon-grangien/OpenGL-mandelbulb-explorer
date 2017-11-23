@@ -1,6 +1,13 @@
 #include <cstdio>
 #include <iostream>
+#include <imgui_impl_glfw_gl3.hh>
+#include <imgui.h>
 #include "Window.hh"
+
+Window::~Window() {
+  ImGui_ImplGlfwGL3_Shutdown();
+  glfwDestroyWindow(window);
+}
 
 bool Window::init(FrameBufferSizeCallback resizeCallback,
                   ProcessInputFunc inputFunc,
@@ -27,6 +34,8 @@ bool Window::init(FrameBufferSizeCallback resizeCallback,
     return false;
   }
 
+  ImGui_ImplGlfwGL3_Init(window, false);
+
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, resizeCallback);
   glfwSetWindowCloseCallback(window, onClose);
@@ -36,9 +45,12 @@ bool Window::init(FrameBufferSizeCallback resizeCallback,
 
 void Window::display() {
   while (!glfwWindowShouldClose(window)) {
+    ImGui_ImplGlfwGL3_NewFrame();
     inputFunc(window);
+
     displayFunc();
 
+    ImGui::Render();
     glfwSwapBuffers(window);
     glfwPollEvents();
   }

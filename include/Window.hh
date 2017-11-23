@@ -16,6 +16,9 @@ class Window {
  public:
   bool logPerformance = false, logCoordinates = false;
 
+  Window() = default;
+  ~Window();
+
   bool init(FrameBufferSizeCallback resizeCallback,
             ProcessInputFunc inputFunc,
             DisplayFunc dispFunc);
