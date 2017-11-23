@@ -12,6 +12,7 @@
 void sphericalToCartesian(float r, float theta, float phi, float &x, float &y, float &z);
 void resizeCallback(GLFWwindow *win, int w, int h);
 void processInput(GLFWwindow *window);
+void display();
 
 // Constants
 #define PI     3.14159265358979323846f
@@ -38,6 +39,8 @@ float power = 8.0;
 bool logPerformance = false;
 bool logCoordinates = false;
 bool shouldUpdateCoordinates = true; // True initially to first set spherical to cartesian
+int nbFrames = 0;
+double lastTime = (float) glfwGetTime();
 
 GLuint shader;
 GLuint vbo, vao;
@@ -64,7 +67,6 @@ const GLfloat quadArray[4][2] = {
     {1.0f, 1.0f}
 };
 mat4x2 quad = glm::make_mat4x2(&quadArray[0][0]);
-mat4 modelViewMatrix = quad * viewMatrix;
 
 mat4 inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
 
@@ -80,15 +82,18 @@ int main(int argc, char *argv[]) {
   if (OK < 0) return -1;
 
   switch (graphicsSetting) {
-    case 0:maxRaySteps = 600.0;
+    case 0:
+      maxRaySteps = 600.0;
       minDistance = 0.0005;
       mandelIters = 1400;
       bailLimit = 5.0;
       power = 6.0;
       break;
     case 1:
-    default:break;
-    case 2:maxRaySteps = 1500.0;
+    default:
+      break;
+    case 2:
+      maxRaySteps = 1500.0;
       minDistance = 0.0000001;
       mandelIters = 2300;
       bailLimit = 10.0;
@@ -104,8 +109,8 @@ int main(int argc, char *argv[]) {
             << "X: Zoom in\n"
             << "R: Reset position\n";
 
-  auto windowHandle = Window();
-  auto glfwOk = windowHandle.init(resizeCallback);
+  auto windowAdapter = Window();
+  auto glfwOk = windowAdapter.init(resizeCallback, processInput, display);
   auto err = glewInit();
 
   if (!glfwOk)
@@ -113,7 +118,7 @@ int main(int argc, char *argv[]) {
   if (err != GLEW_OK)
     std::cout << "Error: GLEW failed to init\n";
 
-  window = windowHandle.window;
+  window = windowAdapter.getHandle();
 
   glDisable(GL_DEPTH_TEST);
 
@@ -131,78 +136,70 @@ int main(int argc, char *argv[]) {
   // Enable attribute index 0 as being used
   glEnableVertexAttribArray(0);
 
-  double lastTime = (float) glfwGetTime();
-  int nbFrames = 0;
+  windowAdapter.display();
+  return 0;
+}
 
-  while (!glfwWindowShouldClose(window)) {
-    processInput(window);
-    currentTime = (float) glfwGetTime();
+void display() {
+  currentTime = (float) glfwGetTime();
 
-    if (logPerformance && logCoordinates) {
-      nbFrames++;
-      if (currentTime - lastTime >= 1.0) {
-        printf("\r%.1f ms/frame, %i FPS, r: %.1f, theta: %.1f, phi: %.1f",
-               1000.0 / double(nbFrames),
-               nbFrames,
-               r,
-               theta,
-               phi);
-        fflush(stdout);
-        nbFrames = 0;
-        lastTime += 1.0;
-      }
-    } else if (logPerformance) {
-      nbFrames++;
-
-      if (currentTime - lastTime >= 1.0) {
-        printf("\r%.1f ms/frame, %i FPS", 1000.0 / double(nbFrames), nbFrames);
-        fflush(stdout);
-        nbFrames = 0;
-        lastTime += 1.0;
-      }
-    } else if (logCoordinates) {
-      printf("\nr: %.1f, theta: %.1f, phi: %.1f and x: %.1f, y: %.1f, z: %.1f", r, theta, phi, x, y, z);
+  if (logPerformance && logCoordinates) {
+    nbFrames++;
+    if (currentTime - lastTime >= 1.0) {
+      printf("\r%.1f ms/frame, %i FPS, r: %.1f, theta: %.1f, phi: %.1f",
+             1000.0 / double(nbFrames),
+             nbFrames,
+             r,
+             theta,
+             phi);
       fflush(stdout);
+      nbFrames = 0;
+      lastTime += 1.0;
     }
+  } else if (logPerformance) {
+    nbFrames++;
 
-    if (shouldUpdateCoordinates) {
-      sphericalToCartesian(r, theta, phi, x, y, z);
-      eye = vec3(y, x, z);
-      viewMatrix = glm::lookAt(eye, center, up);
-      inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
-
-      shouldUpdateCoordinates = false;
+    if (currentTime - lastTime >= 1.0) {
+      printf("\r%.1f ms/frame, %i FPS", 1000.0 / double(nbFrames), nbFrames);
+      fflush(stdout);
+      nbFrames = 0;
+      lastTime += 1.0;
     }
-
-    //ImGui::Text("Hello, world!");
-
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glUseProgram(shader);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "u_inverseVP"), 1, GL_FALSE, glm::value_ptr(inverseVP));
-    glUniform1fv(glGetUniformLocation(shader, "u_nearPlane"), 1, &NEAR_PLANE);
-    glUniform1fv(glGetUniformLocation(shader, "u_farPlane"), 1, &FAR_PLANE);
-    glUniform1fv(glGetUniformLocation(shader, "u_time"), 1, &currentTime);
-    glUniform1fv(glGetUniformLocation(shader, "u_screenRatio"), 1, &screenRatio);
-    glUniform2fv(glGetUniformLocation(shader, "u_screenSize"), 1, glm::value_ptr(screenSize));
-    glUniform1fv(glGetUniformLocation(shader, "u_stepSize"), 1, &STEP_SIZE);
-
-    // Mandel setup
-    glUniform1fv(glGetUniformLocation(shader, "u_maxRaySteps"), 1, &maxRaySteps);
-    glUniform1fv(glGetUniformLocation(shader, "u_minDistance"), 1, &minDistance);
-    glUniform1fv(glGetUniformLocation(shader, "u_mandelIters"), 1, &mandelIters);
-    glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &bailLimit);
-    glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &power);
-
-    glfwSwapBuffers(window);
-    glfwPollEvents();
+  } else if (logCoordinates) {
+    printf("\nr: %.1f, theta: %.1f, phi: %.1f and x: %.1f, y: %.1f, z: %.1f", r, theta, phi, x, y, z);
+    fflush(stdout);
   }
 
-  glfwDestroyWindow(window);
-  glfwTerminate();
-  return 0;
+  if (shouldUpdateCoordinates) {
+    sphericalToCartesian(r, theta, phi, x, y, z);
+    eye = vec3(y, x, z);
+    viewMatrix = glm::lookAt(eye, center, up);
+    inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
+
+    shouldUpdateCoordinates = false;
+  }
+
+  //ImGui::Text("Hello, world!");
+
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+  glUseProgram(shader);
+  glUniformMatrix4fv(glGetUniformLocation(shader, "u_inverseVP"), 1, GL_FALSE, glm::value_ptr(inverseVP));
+  glUniform1fv(glGetUniformLocation(shader, "u_nearPlane"), 1, &NEAR_PLANE);
+  glUniform1fv(glGetUniformLocation(shader, "u_farPlane"), 1, &FAR_PLANE);
+  glUniform1fv(glGetUniformLocation(shader, "u_time"), 1, &currentTime);
+  glUniform1fv(glGetUniformLocation(shader, "u_screenRatio"), 1, &screenRatio);
+  glUniform2fv(glGetUniformLocation(shader, "u_screenSize"), 1, glm::value_ptr(screenSize));
+  glUniform1fv(glGetUniformLocation(shader, "u_stepSize"), 1, &STEP_SIZE);
+
+  // Mandel setup
+  glUniform1fv(glGetUniformLocation(shader, "u_maxRaySteps"), 1, &maxRaySteps);
+  glUniform1fv(glGetUniformLocation(shader, "u_minDistance"), 1, &minDistance);
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelIters"), 1, &mandelIters);
+  glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &bailLimit);
+  glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &power);
 }
 
 void resizeCallback(GLFWwindow *win, int w, int h) {

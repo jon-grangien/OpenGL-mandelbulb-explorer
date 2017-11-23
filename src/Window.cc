@@ -2,7 +2,11 @@
 #include <iostream>
 #include "Window.hh"
 
-bool Window::init(FrameBufferSizeCallback resizeCallback) {
+bool Window::init(FrameBufferSizeCallback resizeCallback,
+                  ProcessInputFunc inputFunc,
+                  DisplayFunc dispFunc) {
+  this->inputFunc = inputFunc;
+  this->displayFunc = dispFunc;
   if (!glfwInit())
     std::cout << "Error: glfw failed to init\n";
 
@@ -28,6 +32,19 @@ bool Window::init(FrameBufferSizeCallback resizeCallback) {
   glfwSetWindowCloseCallback(window, onClose);
   resizeCallback(window, width, height); // call it once
   return true;
+}
+
+void Window::display() {
+  while (!glfwWindowShouldClose(window)) {
+    inputFunc(window);
+    displayFunc();
+
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+  }
+
+  glfwDestroyWindow(window);
+  glfwTerminate();
 }
 
 void Window::onClose(GLFWwindow *win) {

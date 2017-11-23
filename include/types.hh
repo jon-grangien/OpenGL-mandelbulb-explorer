@@ -11,5 +11,7 @@ typedef glm::vec3 vec3;
 typedef glm::vec2 vec2;
 
 typedef void (* FrameBufferSizeCallback)(GLFWwindow *win, int w, int h);
+typedef void (* ProcessInputFunc)(GLFWwindow *win);
+typedef void (* DisplayFunc)();
 
 #endif //MANDELBULB_TYPES_H
