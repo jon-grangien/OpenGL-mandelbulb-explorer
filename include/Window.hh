@@ -21,10 +21,16 @@ class Window {
   bool init(FrameBufferSizeCallback resizeCallback,
             ProcessInputFunc inputFunc,
             DisplayFunc dispFunc);
+
   void display();
-  GLFWwindow *getHandle() { return window; };
-  unsigned int getWidth() { return width; };
-  unsigned int getHeight() { return height; };
+  void setResolution(unsigned int w, unsigned int h) {
+    width = w;
+    height = h;
+  }
+
+  GLFWwindow *getHandle() { return window; }
+  unsigned int getWidth() { return width; }
+  unsigned int getHeight() { return height; }
 
 };
 

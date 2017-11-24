@@ -40,6 +40,7 @@ float power = 8.0;
 auto windowAdapter = Window(INITIAL_WIDTH, INITIAL_HEIGHT);
 bool logPerformance = false;
 bool logCoordinates = false;
+bool weakSettings = false;
 bool shouldUpdateCoordinates = true; // True initially to first set spherical to cartesian
 int nbFrames = 0;
 int displayedFrames = 0;
@@ -81,8 +82,15 @@ auto screenSize = vec2(0.0);
 int main(int argc, char *argv[]) {
 
   // Handle args
-  int OK = utils::handleArgs(argc, argv, logCoordinates);
+  int OK = utils::handleArgs(argc, argv, logCoordinates, weakSettings);
   if (OK < 0) return -1;
+
+  if (weakSettings) {
+    maxRaySteps = 200.0;
+    mandelIters = 100.0;
+    minDistanceFactor = 3.0;
+    power = 6.0;
+  }
 
   std::cout << "Keys:\n"
             << "Q: Quit\n"
@@ -202,6 +210,7 @@ void resizeCallback(GLFWwindow *win, int w, int h) {
   screenSize.x = (GLfloat) w;
   screenSize.y = (GLfloat) h;
   screenRatio = screenSize.x / screenSize.y;
+  windowAdapter.setResolution((unsigned int) w, (unsigned int) h);
   projectionMatrix = glm::perspective(90.0f, screenRatio, NEAR_PLANE, FAR_PLANE);
   inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
 }

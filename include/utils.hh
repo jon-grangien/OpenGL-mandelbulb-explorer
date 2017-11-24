@@ -158,6 +158,7 @@ void showUsage() {
   std::cerr << "Usage: ./mandelbulb -c\n"
             << "Options:\n"
             << "\t-h,--help\t\tShow this message\n"
+            << "\t-w,--weak \t\tLower settings for weak computer i.e. shitty Intel HD graphics laptop\n"
             << "\t-c,--coordinates \tLog coordinates in console every frame \n\n"
             << "Controls:\n"
             << "\tQ \tQuit the program\n"
@@ -169,14 +170,15 @@ void showUsage() {
             << std::endl;
 }
 
-int handleArgs(int c, char *argv[], bool &logCoordinates) {
+int handleArgs(int c, char *argv[], bool &logCoordinates, bool &weakSettings) {
   for (int i = 1; i < c; ++i) {
     std::string arg = argv[i];
 
     if (arg == "-h" || arg == "--help") {
       showUsage();
       return -1;
-
+    } else if (arg == "-w" || arg == "--weak") {
+      weakSettings = true;
     } else if (arg == "-c" || arg == "--coordinates") {
       logCoordinates = true;
     }
