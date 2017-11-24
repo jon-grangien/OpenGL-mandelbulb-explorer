@@ -8,6 +8,7 @@ Render the mandelbulb fractal patterns interactively, with PostFX.
 Usage: ./mandelbulb -c
 Options:
 	-h,--help		Show this message
+	-w,--weak 		Lower settings for weak computer i.e. shitty Intel HD graphics laptop
 	-c,--coordinates 	Log coordinates in console every frame 
 
 Controls:
