@@ -1,4 +1,4 @@
-#version 330 core
+#version 400 core
 
 in vec3 vertRayOrigin;
 in vec3 vertRayDirection;
