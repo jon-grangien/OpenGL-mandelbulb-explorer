@@ -206,6 +206,18 @@ float simpleMarch(vec3 from, vec3 dir, out int stepsTaken, out vec3 pos) {
 	return (1.0 - float(steps) / float(u_maxRaySteps)); // greyscale val based on amount steps
 }
 
+// Simple numerical approximation of gradient
+// calculated from the potential field formed by the DE
+vec3 calculateNormal(vec3 p) {
+    float e = 2e-6f;
+    float n = DEMandelBulb(p);
+    float dx = DEMandelBulb(p + vec3(e, 0, 0)) - n;
+    float dy = DEMandelBulb(p + vec3(0, e, 0)) - n;
+    float dz = DEMandelBulb(p + vec3(0, 0, e)) - n;
+    vec3 grad = vec3(dx, dy, dz);
+    return normalize(grad);
+}
+
 void main() {
     vec2 uv = gl_FragCoord.xy / u_screenSize.xy;
 
