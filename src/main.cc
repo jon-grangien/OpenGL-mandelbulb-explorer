@@ -33,7 +33,7 @@ float baseMinDistance = 0.00001;
 float minDistance = baseMinDistance;
 int minDistanceFactor = 0;
 float mandelIters = 1000;
-float bailLimit = 2.5;
+float bailLimit = 1.8;
 float power = 8.0;
 
 // App state
@@ -172,6 +172,7 @@ void display() {
     minDistance = baseMinDistance;
   }
 
+  ImGui::SliderFloat("Bailout", &bailLimit, 1.0f, 1.81f);
   ImGui::SliderFloat("Power", &power, 1.0f, 32.0f);
   ImGui::Separator();
   ImGui::Value("Min dist", minDistance, "%.9f");
