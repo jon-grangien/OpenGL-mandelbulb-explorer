@@ -12,7 +12,6 @@ out vec3 vertRayOrigin;
 out vec3 vertRayDirection;
 
 void main() {
-    // fragPos = Position.xy;
 
     // Flip values for near and far until we figure out otherwise
     vec4 farPlane = u_inverseVP * vec4(Position.xy, u_nearPlane, 1.0);

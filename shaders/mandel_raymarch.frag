@@ -20,6 +20,8 @@ out vec4 outColor;
 #define LOW_P_ZERO 0.00001
 
 vec3 glowColor = vec3(0.75, 0.9, 1.0);
+vec3 divColorA = vec3(0.69, 0.55, 0.76);
+vec3 divColorB = vec3(0.5, 0.75, 0.48);
 
 float DESphere(vec3 p) {
     return length(p) - SPHERE_R;
@@ -99,7 +101,7 @@ float simpleMarch(vec3 from, vec3 dir, out int stepsTaken) {
 }
 
 void main() {
-    // vec2 uv = fragPos.xy / screenSize.xy - vec2(0.5);
+    vec2 uv = gl_FragCoord.xy / u_screenSize.xy;
 
     // Estimate normal
     //vec3 n = normalize(vec3(DE(pos+xDir)-DE(pos-xDir),
@@ -107,29 +109,21 @@ void main() {
     //                        DE(pos+zDir)-DE(pos-zDir)));
 
     int stepsTaken = 0;
+    vec3 color;
     float gsColor = simpleMarch(vertRayOrigin, vertRayDirection, stepsTaken);
-
-    // DEBUG: Check frag pos
-    //if (uv.x <= 0.5) {
-    //    outColor = vec4(1.0);
-    //    return;
-    //} else if (uv.x > 0.5) {
-    //    outColor = vec4(0.0);
-    //    return;
-    //}
 
     // Ray miss; bg plane color
     if (gsColor < LOW_P_ZERO) {
-      outColor = vec4(1.0);
-      return;
+      color = mix(divColorA, divColorB, uv.x);
 
-    // Mix some red
+    // Ray hit, mix some red
     } else if (gsColor > 0.3) {
-      outColor = vec4(mix(vec3(0.2, 0.2, 1.0), vec3(1.0), gsColor), 1.0);
-      return;
+      color = mix(vec3(0.2, 0.2, 1.0), vec3(1.0), gsColor);
 
     // Fog applied
     } else {
-      outColor = vec4(mix(glowColor, vec3(gsColor), gsColor), 1.0);
+      color = mix(glowColor, vec3(gsColor), gsColor);
     }
+
+    outColor = vec4(color, 1.0);
 }

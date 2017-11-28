@@ -159,10 +159,11 @@ void display() {
   ImGui::SetNextWindowSize(ImVec2(350, 180));
   ImGui::Begin("Settings");
   ImGui::Text("Graphics values");
-  ImGui::SliderFloat("Max ray steps", &maxRaySteps, 1.0f, 3000.0f);
+  ImGui::SliderFloat("Max ray steps", &maxRaySteps, 1.0f, 4000.0f);
   ImGui::SliderFloat("Mandel iters", &mandelIters, 0.0f, 3000.0f);
   ImGui::SliderInt("Min dist factor", &minDistanceFactor, -5, 5);
 
+  // Adjust the min distance by a decimal
   if (minDistanceFactor < 0) {
     minDistance = baseMinDistance / ((float)(pow(10.0, abs(minDistanceFactor))));
   } else if (minDistanceFactor > 0) {
