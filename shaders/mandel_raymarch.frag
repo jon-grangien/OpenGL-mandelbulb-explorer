@@ -13,15 +13,18 @@ uniform float u_mandelIters;
 uniform float u_bailLimit;
 uniform float u_power;
 
+uniform vec3 u_bgColor;
+uniform vec3 u_mandelColorA;
+uniform vec3 u_mandelColorB;
+uniform vec3 u_glowColor;
+uniform bool u_showBgGradient;
+uniform float u_noiseFactor;
+
 out vec4 outColor;
 
 #define SPHERE_R 0.9
 #define SCALE 0.5
 #define LOW_P_ZERO 0.00001
-
-vec3 glowColor = vec3(0.75, 0.9, 1.0);
-vec3 divColorA = vec3(0.69, 0.55, 0.76);
-vec3 divColorB = vec3(0.5, 0.75, 0.48);
 
 //
 // Description : Array and textureless GLSL 2D/3D/4D simplex
@@ -233,21 +236,23 @@ void main() {
 
     // Ray miss; bg plane color
     if (gsColor < LOW_P_ZERO) {
-      color = mix(divColorA, divColorA*0.7, uv.y);
+      color = u_showBgGradient ? mix(u_bgColor, u_bgColor*0.8, uv.y) : u_bgColor;
 
     // Ray hit, mix some blue
     } else if (gsColor > 0.1) {
       float noise = snoise(5.0 * mandelPos);
       noise += 0.5 * snoise(10.0 * mandelPos);
       noise += 0.25 * snoise(20.0 * mandelPos);
+      noise = u_noiseFactor * noise;
+      float timeVariance = abs(sin(0.6 * u_time));
 
-      vec3 c1 = vec3(0.4+0.3*noise*sin(u_time), 0.2*noise, 1.0);
-      vec3 c2 = vec3(1.0) - 0.05 * noise;
+      vec3 c1 = vec3(u_mandelColorA.r * timeVariance, u_mandelColorA.g - noise, u_mandelColorA.b);
+      vec3 c2 = u_mandelColorB - 0.05 * noise;
       color = mix(c1, c2, gsColor);
 
     // Fog applied
     } else {
-      color = mix(glowColor, vec3(gsColor), gsColor);
+      color = mix(u_glowColor, vec3(gsColor), gsColor);
     }
 
     outColor = vec4(color, 1.0);

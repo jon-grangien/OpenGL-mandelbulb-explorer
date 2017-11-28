@@ -35,6 +35,12 @@ int minDistanceFactor = 0;
 float mandelIters = 1000;
 float bailLimit = 1.8;
 float power = 8.0;
+float noiseFactor = 1.0;
+vec3 bgColor = vec3(0.69, 0.55, 0.76);
+vec3 mandelColorA = vec3(0.4, 0.2, 0.1);
+vec3 mandelColorB = vec3(1.0);
+vec3 glowColor = vec3(0.75, 0.9, 1.0);
+bool showBgGradient = false;
 
 // App state
 auto windowAdapter = Window(INITIAL_WIDTH, INITIAL_HEIGHT);
@@ -156,6 +162,7 @@ void display() {
     shouldUpdateCoordinates = false;
   }
 
+  // Graphics settings
   ImGui::SetNextWindowSize(ImVec2(350, 180));
   ImGui::Begin("Settings");
   ImGui::Text("Graphics values");
@@ -178,6 +185,18 @@ void display() {
   ImGui::Value("Min dist", minDistance, "%.9f");
   ImGui::End();
 
+  // Color settings
+  ImGui::Begin("Colors");
+  ImGui::ColorEdit3("Bg color", (float*)&bgColor);
+  ImGui::Checkbox("Bg gradient", &showBgGradient);
+  ImGui::Separator();
+  ImGui::ColorEdit3("Inner", (float*)&mandelColorA);
+  ImGui::ColorEdit3("Outer", (float*)&mandelColorB);
+  ImGui::ColorEdit3("Glow", (float*)&glowColor);
+  ImGui::SliderFloat("Noise", &noiseFactor, 0.0f, 1.0f);
+  ImGui::End();
+
+  // Stats
   ImGui::SetNextWindowPos(ImVec2(0, windowAdapter.getHeight()), 0, ImVec2(0.0, 1.0));
   ImGui::SetNextWindowSize(ImVec2(140, 80));
   ImGui::Begin("State");
@@ -204,6 +223,12 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_mandelIters"), 1, &mandelIters);
   glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &bailLimit);
   glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &power);
+  glUniform3fv(glGetUniformLocation(shader, "u_bgColor"), 1, glm::value_ptr(bgColor));
+  glUniform3fv(glGetUniformLocation(shader, "u_mandelColorA"), 1, glm::value_ptr(mandelColorA));
+  glUniform3fv(glGetUniformLocation(shader, "u_mandelColorB"), 1, glm::value_ptr(mandelColorB));
+  glUniform3fv(glGetUniformLocation(shader, "u_glowColor"), 1, glm::value_ptr(glowColor));
+  glUniform1i(glGetUniformLocation(shader, "u_showBgGradient"), showBgGradient);
+  glUniform1fv(glGetUniformLocation(shader, "u_noiseFactor"), 1, &noiseFactor);
 }
 
 void resizeCallback(GLFWwindow *win, int w, int h) {
