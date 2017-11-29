@@ -206,7 +206,7 @@ float simpleMarch(vec3 from, vec3 dir, out int stepsTaken, out vec3 pos) {
 
 	stepsTaken = steps;
 	pos = p;
-	return (1.0 - float(steps) / float(u_maxRaySteps)); // greyscale val based on amount steps
+	return (1.0 - float(steps) / u_maxRaySteps); // greyscale val based on amount steps
 }
 
 // Simple numerical approximation of gradient
@@ -232,27 +232,34 @@ void main() {
     int stepsTaken = 0;
     vec3 color;
     vec3 mandelPos;
-    float gsColor = simpleMarch(vertRayOrigin, vertRayDirection, stepsTaken, mandelPos);
+    float gsValue = simpleMarch(vertRayOrigin, vertRayDirection, stepsTaken, mandelPos);
 
     // Ray miss; bg plane color
-    if (gsColor < LOW_P_ZERO) {
+    if (gsValue < LOW_P_ZERO) {
       color = u_showBgGradient ? mix(u_bgColor, u_bgColor*0.8, uv.y) : u_bgColor;
 
     // Ray hit, mix some blue
-    } else if (gsColor > 0.1) {
+    } else if (gsValue > 0.1) {
       float noise = snoise(5.0 * mandelPos);
       noise += 0.5 * snoise(10.0 * mandelPos);
       noise += 0.25 * snoise(20.0 * mandelPos);
       noise = u_noiseFactor * noise;
       float timeVariance = abs(sin(0.6 * u_time));
 
-      vec3 c1 = vec3(u_mandelColorA.r * timeVariance, u_mandelColorA.g - noise, u_mandelColorA.b);
-      vec3 c2 = u_mandelColorB - 0.05 * noise;
-      color = mix(c1, c2, gsColor);
+      //vec3 c1 = vec3(u_mandelColorA.r * timeVariance, u_mandelColorA.g - noise, u_mandelColorA.b);
+      //vec3 c2 = u_mandelColorB - 0.05 * noise;
+      //color = mix(c1, c2, gsValue);
+      float r = stepsTaken/u_maxRaySteps;
+      float g = stepsTaken/u_maxRaySteps - 0.08 * noise;
+      float b = stepsTaken*3.0/u_maxRaySteps;
+      r = min(1.0, r) * timeVariance;
+      // g = min(1.0, g);
+      b = min(1.0, b);
+      color = vec3(r, g, b);
 
     // Fog applied
     } else {
-      color = mix(u_glowColor, vec3(gsColor), gsColor);
+      color = mix(u_glowColor, vec3(gsValue), gsValue);
     }
 
     outColor = vec4(color, 1.0);
