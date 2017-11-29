@@ -164,12 +164,12 @@ float DEMandelBulb(vec3 pos) {
 		if (r > u_bailLimit) break;
 
 		// convert to polar coordinates
-		float theta = acos(z.z/r);
-		float phi = atan(z.y,z.x);
+		//float theta = acos(z.z/r);
+		//float phi = atan(z.y,z.x);
 
     // Alternate method to spherical
-		// float theta = asin( z.z/r );
-    // float phi = atan( z.y,z.x );
+		 float theta = asin( z.z/r );
+     float phi = atan( z.y,z.x );
 
 		dr = pow(r, u_power-1.0)*u_power*dr + 1.0;
 
@@ -179,10 +179,10 @@ float DEMandelBulb(vec3 pos) {
 		phi = phi*u_power;
 
 		// convert back to cartesian coordinates
-		z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
+		//z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
 
     // Alternate method to spherical
-		// z = zr*vec3( cos(theta)*cos(phi), cos(theta)*sin(phi), sin(theta) );
+		 z = zr*vec3( cos(theta)*cos(phi), cos(theta)*sin(phi), sin(theta) );
 
 		z += pos;
 	}
