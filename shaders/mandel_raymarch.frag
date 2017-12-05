@@ -6,6 +6,7 @@ in vec3 vertRayDirection;
 uniform float u_time;
 uniform float u_screenRatio;
 uniform vec2 u_screenSize;
+uniform vec3 u_eyePos;
 
 uniform float u_maxRaySteps;
 uniform float u_minDistance;
@@ -18,9 +19,12 @@ uniform vec3 u_mandelColorA;
 uniform vec3 u_mandelColorB;
 uniform vec3 u_glowColor;
 uniform bool u_showBgGradient;
+uniform bool u_phongShading;
 uniform float u_noiseFactor;
 
 out vec4 outColor;
+
+const vec3 lightPos = vec3(5.0, 0.0, -30.0);
 
 #define SPHERE_R 0.9
 #define SCALE 0.5
@@ -221,13 +225,40 @@ vec3 calculateNormal(vec3 p) {
     return normalize(grad);
 }
 
+vec3 calculateBlinnPhong(vec3 diffColor, vec3 p, vec3 rayDir) {
+    vec3 ambientColor = diffColor * 0.8;
+    const vec3 lightColor = vec3(1.0);
+    const vec3 specColor = vec3(1.0);
+    const float ambIntensity  = 1.0;
+    const float diffIntensity = 1.0;
+    const float specIntensity = 1.0;
+    const float screenGamma   = 2.2;
+
+    vec3 normal = calculateNormal(p);
+
+    vec3 eyeVec = u_eyePos - p;
+    float distance = length(eyeVec);
+    distance = distance * distance;
+    eyeVec = normalize(eyeVec);
+    vec3 lightVec = normalize(lightPos - p);
+    vec3 H = normalize(lightVec + eyeVec);
+
+    float lightPower = 0.4;
+    float shininess  = 32.0;
+
+    float lambertian = max(dot(lightVec, normal), 0.0);
+    float specular = max(dot(H, normal), 0.0);
+    specular = pow(specular, shininess);
+
+    vec3 BPColor = ambIntensity * ambientColor +
+        diffIntensity * diffColor * lambertian * lightColor * lightPower / distance +
+        specIntensity * specColor * specular * lightColor * lightPower / distance;
+
+    return pow(BPColor, vec3(1.0/screenGamma));
+}
+
 void main() {
     vec2 uv = gl_FragCoord.xy / u_screenSize.xy;
-
-    // Estimate normal
-    //vec3 n = normalize(vec3(DE(pos+xDir)-DE(pos-xDir),
-    //                        DE(pos+yDir)-DE(pos-yDir),
-    //                        DE(pos+zDir)-DE(pos-zDir)));
 
     int stepsTaken = 0;
     vec3 color;
@@ -244,7 +275,8 @@ void main() {
       noise += 0.5 * snoise(10.0 * mandelPos);
       noise += 0.25 * snoise(20.0 * mandelPos);
       noise = u_noiseFactor * noise;
-      float timeVariance = abs(sin(0.6 * u_time));
+      //float timeVariance = abs(sin(0.6 * u_time));
+      float timeVariance = 1.0;
 
       //vec3 c1 = vec3(u_mandelColorA.r * timeVariance, u_mandelColorA.g - noise, u_mandelColorA.b);
       //vec3 c2 = u_mandelColorB - 0.05 * noise;
@@ -256,6 +288,7 @@ void main() {
       // g = min(1.0, g);
       b = min(1.0, b);
       color = vec3(r, g, b);
+      color = u_phongShading ? calculateBlinnPhong(color, mandelPos, vertRayDirection) : color;
 
     // Fog applied
     } else {

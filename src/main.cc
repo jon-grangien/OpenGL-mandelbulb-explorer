@@ -42,6 +42,7 @@ vec3 mandelColorA = vec3(0.9, 0.6, 1.0);
 vec3 mandelColorB = vec3(1.0);
 vec3 glowColor = vec3(0.75, 0.9, 1.0);
 bool showBgGradient = true;
+bool phongShading = true;
 
 // App state
 auto windowAdapter = Window(INITIAL_WIDTH, INITIAL_HEIGHT);
@@ -184,6 +185,7 @@ void display() {
 
   ImGui::SliderFloat("Bailout", &bailLimit, 1.0f, 1.81f);
   ImGui::SliderFloat("Power", &power, 1.0f, 32.0f);
+  ImGui::Checkbox("Light source", &phongShading);
   ImGui::Separator();
   ImGui::Value("Min dist", minDistance, "%.9f");
   ImGui::End();
@@ -227,10 +229,12 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_mandelIters"), 1, &mandelIters);
   glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &bailLimit);
   glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &power);
+  glUniform1i(glGetUniformLocation(shader, "u_phongShading"), phongShading);
   glUniform3fv(glGetUniformLocation(shader, "u_bgColor"), 1, glm::value_ptr(bgColor));
   glUniform3fv(glGetUniformLocation(shader, "u_mandelColorA"), 1, glm::value_ptr(mandelColorA));
   glUniform3fv(glGetUniformLocation(shader, "u_mandelColorB"), 1, glm::value_ptr(mandelColorB));
   glUniform3fv(glGetUniformLocation(shader, "u_glowColor"), 1, glm::value_ptr(glowColor));
+  glUniform3fv(glGetUniformLocation(shader, "u_eyePos"), 1, glm::value_ptr(eye));
   glUniform1i(glGetUniformLocation(shader, "u_showBgGradient"), showBgGradient);
   glUniform1fv(glGetUniformLocation(shader, "u_noiseFactor"), 1, &noiseFactor);
 }
