@@ -14,6 +14,10 @@ uniform float u_mandelIters;
 uniform float u_bailLimit;
 uniform float u_power;
 
+uniform float u_mandelRFactor;
+uniform float u_mandelGFactor;
+uniform float u_mandelBFactor;
+
 uniform vec3 u_bgColor;
 uniform vec3 u_mandelColorA;
 uniform vec3 u_mandelColorB;
@@ -267,28 +271,27 @@ void main() {
 
     // Ray miss; bg plane color
     if (gsValue < LOW_P_ZERO) {
-      color = u_showBgGradient ? mix(u_bgColor, u_bgColor*0.8, uv.y) : u_bgColor;
+        color = u_showBgGradient ? mix(u_bgColor, u_bgColor*0.8, uv.y) : u_bgColor;
 
-    // Ray hit, mix some blue
+    // Ray hit
     } else if (gsValue > 0.1) {
-      float noise = snoise(5.0 * mandelPos);
-      noise += 0.5 * snoise(10.0 * mandelPos);
-      noise += 0.25 * snoise(20.0 * mandelPos);
-      noise = u_noiseFactor * noise;
-      //float timeVariance = abs(sin(0.6 * u_time));
-      float timeVariance = 1.0;
+        float noise = snoise(5.0 * mandelPos);
+        noise += 0.5 * snoise(10.0 * mandelPos);
+        noise += 0.25 * snoise(20.0 * mandelPos);
+        noise = u_noiseFactor * noise;
+        float timeVariance = 0.1 * abs(sin(0.6 * u_time));
 
-      //vec3 c1 = vec3(u_mandelColorA.r * timeVariance, u_mandelColorA.g - noise, u_mandelColorA.b);
-      //vec3 c2 = u_mandelColorB - 0.05 * noise;
-      //color = mix(c1, c2, gsValue);
-      float r = stepsTaken/u_maxRaySteps;
-      float g = stepsTaken/u_maxRaySteps - 0.08 * noise;
-      float b = stepsTaken*3.0/u_maxRaySteps;
-      r = min(1.0, r) * timeVariance;
-      // g = min(1.0, g);
-      b = min(1.0, b);
-      color = vec3(r, g, b);
-      color = u_phongShading ? calculateBlinnPhong(color, mandelPos, vertRayDirection) : color;
+        //vec3 c1 = vec3(u_mandelColorA.r * timeVariance, u_mandelColorA.g - noise, u_mandelColorA.b);
+        //vec3 c2 = u_mandelColorB - 0.05 * noise;
+        //color = mix(c1, c2, gsValue);
+        float r = stepsTaken*u_mandelRFactor/u_maxRaySteps - 0.08 * noise;
+        float g = stepsTaken*u_mandelGFactor/u_maxRaySteps - 0.08 * noise;
+        float b = stepsTaken*u_mandelBFactor/u_maxRaySteps - 0.08 * noise;
+        r = min(1.0, r + timeVariance);
+        g = min(1.0, g);
+        b = min(1.0, b);
+        color = vec3(r, g, b);
+        color = u_phongShading ? calculateBlinnPhong(color, mandelPos, vertRayDirection) : color;
 
     // Fog applied
     } else {

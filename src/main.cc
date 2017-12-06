@@ -40,6 +40,9 @@ float noiseFactor = 1.0;
 vec3 bgColor = vec3(0.69, 0.55, 0.76);
 vec3 mandelColorA = vec3(0.9, 0.6, 1.0);
 vec3 mandelColorB = vec3(1.0);
+float mandelRFactor = 1.0;
+float mandelGFactor = 1.0;
+float mandelBFactor = 3.0;
 vec3 glowColor = vec3(0.75, 0.9, 1.0);
 bool showBgGradient = true;
 bool phongShading = true;
@@ -196,9 +199,9 @@ void display() {
   ImGui::ColorEdit3("Bg color", (float*)&bgColor);
   ImGui::Checkbox("Bg gradient", &showBgGradient);
   ImGui::Separator();
-  ImGui::ColorEdit3("Inner", (float*)&mandelColorA);
-  ImGui::ColorEdit3("Outer", (float*)&mandelColorB);
-  ImGui::ColorEdit3("Glow", (float*)&glowColor);
+  ImGui::SliderFloat("Mandel R", &mandelRFactor, 1.0f, 8.0f);
+  ImGui::SliderFloat("Mandel G", &mandelGFactor, 1.0f, 8.0f);
+  ImGui::SliderFloat("Mandel B", &mandelBFactor, 1.0f, 8.0f);
   ImGui::SliderFloat("Noise", &noiseFactor, 0.0f, 1.0f);
   ImGui::End();
 
@@ -231,8 +234,9 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &power);
   glUniform1i(glGetUniformLocation(shader, "u_phongShading"), phongShading);
   glUniform3fv(glGetUniformLocation(shader, "u_bgColor"), 1, glm::value_ptr(bgColor));
-  glUniform3fv(glGetUniformLocation(shader, "u_mandelColorA"), 1, glm::value_ptr(mandelColorA));
-  glUniform3fv(glGetUniformLocation(shader, "u_mandelColorB"), 1, glm::value_ptr(mandelColorB));
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelRFactor"), 1, &mandelRFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelGFactor"), 1, &mandelGFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelBFactor"), 1, &mandelBFactor);
   glUniform3fv(glGetUniformLocation(shader, "u_glowColor"), 1, glm::value_ptr(glowColor));
   glUniform3fv(glGetUniformLocation(shader, "u_eyePos"), 1, glm::value_ptr(eye));
   glUniform1i(glGetUniformLocation(shader, "u_showBgGradient"), showBgGradient);
@@ -318,10 +322,12 @@ void sphericalToCartesian(float r, float theta, float phi, float &x, float &y, f
 
 void setGuiStyle() {
   ImVec4* colors = ImGui::GetStyle().Colors;
+  vec3 bgLow = 0.7f * vec3(bgColor.r, bgColor.g, bgColor.b);
+
   colors[ImGuiCol_WindowBg]               = ImVec4(0.94f, 0.94f, 0.94f, 0.55f);
   colors[ImGuiCol_Border]                 = ImVec4(0.60f, 0.23f, 0.23f, 0.00f);
-  colors[ImGuiCol_TitleBg]                = ImVec4(mandelColorA.r, mandelColorA.g, mandelColorA.b, 0.40f);
-  colors[ImGuiCol_TitleBgActive]          = ImVec4(mandelColorA.r, mandelColorA.g, mandelColorA.b, 0.65f);
+  colors[ImGuiCol_TitleBg]                = ImVec4(bgLow.r, bgLow.g, bgLow.b, 0.40f);
+  colors[ImGuiCol_TitleBgActive]          = ImVec4(bgLow.r, bgLow.g, bgLow.b, 0.65f);
   colors[ImGuiCol_Text]                   = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
   colors[ImGuiCol_TextDisabled]           = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
   colors[ImGuiCol_ChildBg]                = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
@@ -330,7 +336,7 @@ void setGuiStyle() {
   colors[ImGuiCol_FrameBg]                = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
   colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
   colors[ImGuiCol_FrameBgActive]          = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-  colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(1.00f, 1.00f, 1.00f, 0.51f);
+  colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(bgLow.r, bgLow.g, bgLow.b, 0.25f);
   colors[ImGuiCol_MenuBarBg]              = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
   colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
   colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.69f, 0.69f, 0.69f, 0.80f);
