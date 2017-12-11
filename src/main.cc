@@ -5,28 +5,23 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "Window.hh"
 #include "types.hh"
+#include "Camera.hh"
 #include <imgui.h>
 #include <GLFW/glfw3.h>
 
 // Declarations
-void sphericalToCartesian(float r, float theta, float phi, float &x, float &y, float &z);
 void resizeCallback(GLFWwindow *win, int w, int h);
 void processInput(GLFWwindow *window);
 void display();
+void switchToSphericalControls();
+void switchToFreeControls();
 void setGuiStyle();
-
-// Constants
-#define PI     3.14159265358979323846f
-#define TWO_PI 6.28318530718f
 
 float STEP_SIZE = 0.001f;
 unsigned int INITIAL_WIDTH = 800;
 unsigned int INITIAL_HEIGHT = 640;
 float NEAR_PLANE = 0.1f;
 float FAR_PLANE = 100.0f;
-float COORDINATES_STEP = 0.005f;
-float COORDINATES_STEP_HALF = 0.0025f;
-float COORDINATES_STEP_DOUBLE = 0.01f;
 
 // Arg variables
 float maxRaySteps = 1000.0;
@@ -52,29 +47,16 @@ auto windowAdapter = Window(INITIAL_WIDTH, INITIAL_HEIGHT);
 bool logPerformance = false;
 bool logCoordinates = false;
 bool weakSettings = false;
-bool shouldUpdateCoordinates = true; // True initially to first set spherical to cartesian
 int nbFrames = 0;
 int displayedFrames = 0;
 float displayedMS = 0;
 double lastTime = (float) glfwGetTime();
 
+bool shouldUpdateCoordinates = true; // True initially to first set spherical to cartesian
+
 GLuint shader;
 GLuint vbo, vao;
 GLFWwindow *window;
-mat4 projectionMatrix = glm::perspective(90.0f, (GLfloat) INITIAL_WIDTH / (GLfloat) INITIAL_HEIGHT, NEAR_PLANE, FAR_PLANE);
-
-// Coordinates for eye pos
-float defaultR = 1.3f, defaultTheta = 0.0f, defaultPhi = 0.0f;
-float r = defaultR;
-float theta = defaultTheta;
-float phi = defaultPhi;
-float x = 0.0f, y = 0.0f, z = 0.0f;
-
-// View matrix set up with glm
-vec3 eye = vec3(0.0f, 0.0f, 1.0f);
-vec3 center = vec3(0.0f, 0.0f, 0.0f);
-vec3 up = vec3(0.0f, 1.0f, 0.0f);
-mat4 viewMatrix = glm::lookAt(eye, center, up);
 
 const GLfloat quadArray[4][2] = {
     {-1.0f, -1.0f},
@@ -84,11 +66,14 @@ const GLfloat quadArray[4][2] = {
 };
 mat4x2 quad = glm::make_mat4x2(&quadArray[0][0]);
 
-mat4 inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
+// Do in main
+mat4 inverseVP;
 
 GLfloat currentTime = 0.0;
 GLfloat screenRatio;
 auto screenSize = vec2(0.0);
+
+Camera cam = Camera(INITIAL_WIDTH, INITIAL_HEIGHT, NEAR_PLANE, FAR_PLANE);
 
 int main(int argc, char *argv[]) {
 
@@ -99,7 +84,7 @@ int main(int argc, char *argv[]) {
   if (weakSettings) {
     maxRaySteps = 200.0;
     mandelIters = 100.0;
-    minDistanceFactor = 3.0;
+    minDistanceFactor = 3;
     power = 6.0;
   }
 
@@ -119,6 +104,7 @@ int main(int argc, char *argv[]) {
   if (err != GLEW_OK)
     std::cout << "Error: GLEW failed to init\n";
 
+  inverseVP = glm::inverse(cam.viewMatrix) * glm::inverse(cam.projectionMatrix);
   window = windowAdapter.getHandle();
 
   glDisable(GL_DEPTH_TEST);
@@ -144,8 +130,16 @@ int main(int argc, char *argv[]) {
 void display() {
   currentTime = (float) glfwGetTime();
 
+  //if (previousFreeControlsActive != freeControlsActive) {
+  //  if (freeControlsActive)
+  //    switchToFreeControls();
+  //  else
+  //    switchToSphericalControls();
+  //}
+  //previousFreeControlsActive = freeControlsActive;
+
   if (logCoordinates) {
-    printf("\nr: %.1f, theta: %.1f, phi: %.1f and x: %.1f, y: %.1f, z: %.1f", r, theta, phi, x, y, z);
+    cam.printCoordinates();
     fflush(stdout);
   }
 
@@ -159,10 +153,14 @@ void display() {
   }
 
   if (shouldUpdateCoordinates) {
-    sphericalToCartesian(r, theta, phi, x, y, z);
-    eye = vec3(y, x, z);
-    viewMatrix = glm::lookAt(eye, center, up);
-    inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
+    if (!cam.freeControlsActive) {
+      cam.sphericalToCartesian();
+      cam.eye = vec3(cam.y, cam.x, cam.z);
+    } else {
+      //eyeTarget = glm::lookAt(eyeTarget, eye, vec3(0.0, 0.0, 1.0)) * 
+    }
+    cam.updateViewMatrix();
+    inverseVP = glm::inverse(cam.viewMatrix) * glm::inverse(cam.projectionMatrix);
 
     shouldUpdateCoordinates = false;
   }
@@ -189,8 +187,11 @@ void display() {
   ImGui::SliderFloat("Bailout", &bailLimit, 1.0f, 1.81f);
   ImGui::SliderFloat("Power", &power, 1.0f, 32.0f);
   ImGui::Checkbox("Light source", &phongShading);
+  ImGui::Value("(Min dist):", minDistance, "%.9f");
   ImGui::Separator();
-  ImGui::Value("Min dist", minDistance, "%.9f");
+  ImGui::Text("Controls");
+  ImGui::Checkbox("FREE MODE", &cam.freeControlsActive);
+  ImGui::SliderFloat("Turn step", &cam.freeModeTurnStep, 0.00001, 0.001);
   ImGui::End();
 
   // Color settings
@@ -238,7 +239,7 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_mandelGFactor"), 1, &mandelGFactor);
   glUniform1fv(glGetUniformLocation(shader, "u_mandelBFactor"), 1, &mandelBFactor);
   glUniform3fv(glGetUniformLocation(shader, "u_glowColor"), 1, glm::value_ptr(glowColor));
-  glUniform3fv(glGetUniformLocation(shader, "u_eyePos"), 1, glm::value_ptr(eye));
+  glUniform3fv(glGetUniformLocation(shader, "u_eyePos"), 1, glm::value_ptr(cam.eye));
   glUniform1i(glGetUniformLocation(shader, "u_showBgGradient"), showBgGradient);
   glUniform1fv(glGetUniformLocation(shader, "u_noiseFactor"), 1, &noiseFactor);
 }
@@ -250,8 +251,17 @@ void resizeCallback(GLFWwindow *win, int w, int h) {
   screenSize.y = (GLfloat) h;
   screenRatio = screenSize.x / screenSize.y;
   windowAdapter.setResolution((unsigned int) w, (unsigned int) h);
-  projectionMatrix = glm::perspective(90.0f, screenRatio, NEAR_PLANE, FAR_PLANE);
-  inverseVP = glm::inverse(viewMatrix) * glm::inverse(projectionMatrix);
+  cam.projectionMatrix = glm::perspective(90.0f, screenRatio, NEAR_PLANE, FAR_PLANE);
+  inverseVP = glm::inverse(cam.viewMatrix) * glm::inverse(cam.projectionMatrix);
+}
+
+void switchToFreeControls() {
+  cam.eyeTarget = cam.center;
+  //...
+}
+
+void switchToSphericalControls() {
+  cam.eyeTarget = cam.center;
 }
 
 void processInput(GLFWwindow *window) {
@@ -266,58 +276,42 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
     shader = utils::loadShaders("../shaders/mandel_raymarch.vert", "../shaders/mandel_raymarch.frag");
 
+  // TODO: Switch statement
   // Movement
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    theta -= COORDINATES_STEP;
-    theta = std::max(0.0f, theta);
-    theta = std::min(PI, theta);
+    cam.handleKeyPressW();
   }
 
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    phi -= COORDINATES_STEP_DOUBLE;
-    phi = std::max(0.0f, phi);
-    phi = std::min(TWO_PI, phi);
+    cam.handleKeyPressA();
   }
 
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    theta += COORDINATES_STEP;
-    theta = std::max(0.0f, theta);
-    theta = std::min(PI, theta);
+    cam.handleKeyPressS();
   }
 
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    phi += COORDINATES_STEP_DOUBLE;
-    phi = std::max(0.0f, phi);
-    phi = std::min(TWO_PI, phi);
+    cam.handleKeyPressD();
   }
 
   if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    r -= COORDINATES_STEP_HALF;
+    cam.handleKeyPressZ();
   }
 
   if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    r += COORDINATES_STEP_HALF;
+    cam.handleKeyPressX();
   }
 
   // Reset camera
   if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
-    r = defaultR;
-    theta = defaultTheta;
-    phi = defaultPhi;
   }
-}
-
-void sphericalToCartesian(float r, float theta, float phi, float &x, float &y, float &z) {
-  x = r * sinf(theta) * cosf(phi);
-  y = r * sinf(theta) * sinf(phi);
-  z = r * cosf(theta);
 }
 
 void setGuiStyle() {
