@@ -98,6 +98,5 @@ void Camera::sphericalToCartesian() {
   x = r * sinf(theta) * cosf(phi);
   y = r * sinf(theta) * sinf(phi);
   z = r * cosf(theta);
-  printCoordinates();
 }
 

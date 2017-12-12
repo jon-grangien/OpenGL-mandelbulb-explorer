@@ -279,9 +279,6 @@ void main() {
         return;
     }
 
-    // dDebug
-    //if ()
-
     // Ray hit
     float noise = snoise(5.0 * mandelPos);
     noise += 0.5 * snoise(10.0 * mandelPos);
@@ -298,8 +295,11 @@ void main() {
     color = vec3(r, g, b) - 0.08 * u_noiseFactor * noise;
     color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_phongShading));
     
-    // Mix in fog
+    // Mix in glow
     color = mix(u_glowFactor * u_glowColor, color, gsValue);
+
+    // AO?
+    //color = mix(0.2 * color, color, gsValue);
 
     outColor = vec4(color, 1.0);
 }

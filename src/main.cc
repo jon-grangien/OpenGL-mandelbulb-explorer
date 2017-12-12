@@ -18,6 +18,8 @@ void setGuiStyle();
 float STEP_SIZE = 0.001f;
 unsigned int INITIAL_WIDTH = 800;
 unsigned int INITIAL_HEIGHT = 640;
+//float NEAR_PLANE = -10.0f;
+//float FAR_PLANE = 1.0f;
 float NEAR_PLANE = 0.1f;
 float FAR_PLANE = 100.0f;
 float FOV = 50.0f;
@@ -213,11 +215,14 @@ void display() {
   ImGui::End();
 
   // Debug
-  ImGui::Begin("Debug");
-  ImGui::SliderFloat("Near plane", &NEAR_PLANE, -1.0f, 10.0f);
-  ImGui::SliderFloat("Far plane", &FAR_PLANE, -1.0f, 10.0f);
-  ImGui::End();
-  cam.projectionMatrix = glm::perspective(glm::radians(FOV), screenRatio, NEAR_PLANE, FAR_PLANE);
+  //ImGui::Begin("Debug");
+  //ImGui::SliderFloat("Near plane", &NEAR_PLANE, -1.0f, 2.0f);
+  //ImGui::SliderFloat("Far plane", &FAR_PLANE, -2.0f, 2.0f);
+  //ImGui::End();
+  //NEAR_PLANE = std::abs(NEAR_PLANE - 0.001f) < 0.001f ? 0.001f : NEAR_PLANE;
+  //FAR_PLANE = std::abs(FAR_PLANE - 0.001f) < 0.001f ? 0.001f : FAR_PLANE;
+  //cam.projectionMatrix = glm::perspective(glm::radians(FOV), screenRatio, NEAR_PLANE, FAR_PLANE);
+  //cam.printCoordinates();
 
   // Stats
   ImGui::SetNextWindowPos(ImVec2(0, windowAdapter.getHeight()), 0, ImVec2(0.0, 1.0));
