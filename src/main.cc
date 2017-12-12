@@ -20,6 +20,7 @@ unsigned int INITIAL_WIDTH = 800;
 unsigned int INITIAL_HEIGHT = 640;
 float NEAR_PLANE = 0.1f;
 float FAR_PLANE = 100.0f;
+float FOV = 50.0f;
 
 struct FractalUniforms {
   float maxRaySteps = 1000.0;
@@ -27,7 +28,7 @@ struct FractalUniforms {
   float minDistance = baseMinDistance;
   int minDistanceFactor = 0;
   float mandelIters = 1000;
-  float bailLimit = 1.8;
+  float bailLimit = 5.0;
   float power = 8.0;
   float noiseFactor = 1.0;
   vec3 bgColor = vec3(0.69, 0.55, 0.76);
@@ -72,8 +73,8 @@ mat4x2 quad = glm::make_mat4x2(&quadArray[0][0]);
 mat4 inverseVP;
 
 GLfloat currentTime = 0.0;
-GLfloat screenRatio;
-auto screenSize = vec2(0.0);
+auto screenSize = vec2(INITIAL_WIDTH, INITIAL_HEIGHT);
+GLfloat screenRatio = screenSize.x / screenSize.y;
 
 auto windowAdapter = Window(INITIAL_WIDTH, INITIAL_HEIGHT);
 auto cam = Camera(INITIAL_WIDTH, INITIAL_HEIGHT, NEAR_PLANE, FAR_PLANE);
@@ -152,7 +153,7 @@ void display() {
       cam.updateCenteredViewMatrix();
     }
 
-    inverseVP = glm::inverse(cam.viewMatrix) * glm::inverse(cam.projectionMatrix);
+    inverseVP = glm::inverse(cam.projectionMatrix * cam.viewMatrix);
 
     shouldUpdateCoordinates = false;
   }
@@ -176,7 +177,7 @@ void display() {
     u.minDistance = u.baseMinDistance;
   }
 
-  ImGui::SliderFloat("Bailout", &u.bailLimit, 1.0f, 1.81f);
+  ImGui::SliderFloat("Bailout", &u.bailLimit, 1.0f, 10.0f);
   ImGui::SliderFloat("Power", &u.power, 1.0f, 32.0f);
   ImGui::Checkbox("Light source", &u.phongShading);
   ImGui::Value("(Min dist):", u.minDistance, "%.9f");
@@ -210,6 +211,13 @@ void display() {
     ImGui::Checkbox("Gamma correction", &u.gammaCorrection);
   }
   ImGui::End();
+
+  // Debug
+  ImGui::Begin("Debug");
+  ImGui::SliderFloat("Near plane", &NEAR_PLANE, -1.0f, 10.0f);
+  ImGui::SliderFloat("Far plane", &FAR_PLANE, -1.0f, 10.0f);
+  ImGui::End();
+  cam.projectionMatrix = glm::perspective(glm::radians(FOV), screenRatio, NEAR_PLANE, FAR_PLANE);
 
   // Stats
   ImGui::SetNextWindowPos(ImVec2(0, windowAdapter.getHeight()), 0, ImVec2(0.0, 1.0));
@@ -262,8 +270,8 @@ void resizeCallback(GLFWwindow *win, int w, int h) {
   screenSize.y = (GLfloat) h;
   screenRatio = screenSize.x / screenSize.y;
   windowAdapter.setResolution((unsigned int) w, (unsigned int) h);
-  cam.projectionMatrix = glm::perspective(90.0f, screenRatio, NEAR_PLANE, FAR_PLANE);
-  inverseVP = glm::inverse(cam.viewMatrix) * glm::inverse(cam.projectionMatrix);
+  cam.projectionMatrix = glm::perspective(glm::radians(FOV), screenRatio, NEAR_PLANE, FAR_PLANE);
+  inverseVP = glm::inverse(cam.projectionMatrix * cam.viewMatrix);
 }
 
 // Process input keys concurrently of each other

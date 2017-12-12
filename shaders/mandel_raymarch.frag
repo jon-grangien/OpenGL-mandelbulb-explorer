@@ -279,12 +279,15 @@ void main() {
         return;
     }
 
+    // dDebug
+    //if ()
+
     // Ray hit
     float noise = snoise(5.0 * mandelPos);
     noise += 0.5 * snoise(10.0 * mandelPos);
     noise += 0.25 * snoise(20.0 * mandelPos);
     noise = u_noiseFactor * noise;
-    float timeVariance = 0.1 * abs(sin(0.6 * u_time));
+    float timeVariance = 0.01 * abs(sin(0.6 * u_time));
 
     float r = stepsTaken*u_mandelRFactor/u_maxRaySteps;
     float g = stepsTaken*u_mandelGFactor/u_maxRaySteps;

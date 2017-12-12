@@ -9,7 +9,7 @@ Camera::Camera(unsigned int w, unsigned int h, float near, float far) {
 };
 
 void Camera::printCoordinates() {
-  printf("\nr: %.1f, theta: %.1f, phi: %.1f and x: %.1f, y: %.1f, z: %.1f", r, theta, phi, x, y, z);
+  printf("\nr: %.3f, theta: %.3f, phi: %.3f and x: %.3f, y: %.3f, z: %.3f", r, theta, phi, x, y, z);
 }
 
 void Camera::updateCenteredViewMatrix() {
@@ -98,5 +98,6 @@ void Camera::sphericalToCartesian() {
   x = r * sinf(theta) * cosf(phi);
   y = r * sinf(theta) * sinf(phi);
   z = r * cosf(theta);
+  printCoordinates();
 }
 

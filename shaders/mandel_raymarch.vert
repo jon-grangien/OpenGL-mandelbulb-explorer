@@ -10,12 +10,13 @@ out float fragTime;
 
 out vec3 vertRayOrigin;
 out vec3 vertRayDirection;
+out float fragZ;
 
 void main() {
 
     // Flip values for near and far until we figure out otherwise
-    vec4 farPlane = u_inverseVP * vec4(Position.xy, u_nearPlane, 1.0);
-    vec4 nearPlane = u_inverseVP * vec4(Position.xy, u_farPlane, 1.0);
+    vec4 farPlane = u_inverseVP * vec4(Position.xy, u_farPlane, 1.0);
+    vec4 nearPlane = u_inverseVP * vec4(Position.xy, u_nearPlane, 1.0);
     farPlane /= farPlane.w;
     nearPlane /= nearPlane.w;
 
