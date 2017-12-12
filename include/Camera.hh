@@ -5,15 +5,13 @@
 #include "types.hh"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "glm/gtx/transform.hpp"
 
 // Constants
 #define PI     3.14159265358979323846f
 #define TWO_PI 6.28318530718f
 
 class Camera {
-  const float SPHER_COORDINATES_STEP = 0.005f;
-  const float SPHER_COORDINATES_STEP_HALF = 0.0025f;
-  const float SPHER_COORDINATES_STEP_DOUBLE = 0.01f;
 
   // Coordinates for viewer
   float defaultR = 1.3f, defaultTheta = 0.0f, defaultPhi = 0.0f;
@@ -23,15 +21,13 @@ class Camera {
 
  public:
   float x = 0.0f, y = 0.0f, z = 0.0f;
-  float freeModeTurnStep = 0.001f;
-  float freeModeZoomStep = 0.00005f;
+  float coordTurnStep = 0.01f;
+  float coordZoomStep = 0.008f;
   bool freeControlsActive = false;
-  bool previousFreeControlsActive = false;
   bool constantZoom = false;
 
   vec3 eye;
   vec3 center;
-  vec3 eyeTarget;
   vec3 up;
   mat4 viewMatrix;
   mat4 projectionMatrix;
@@ -47,8 +43,13 @@ class Camera {
   /**
    * Recalculate view matrix with viewer
    */
-  void updateViewMatrix();
-  void setEyeTargetViewCoordSystem();
+  void updateCenteredViewMatrix();
+  void rotateViewMatrixHorizontally(float a);
+  void rotateViewMatrixVertically(float a);
+  void translateViewMatrix(float v);
+
+  vec3 getViewMatrixBackward();
+  vec3 getViewMatrixForward();
 
   // Key press handlers
   void handleKeyPressW();
@@ -57,9 +58,6 @@ class Camera {
   void handleKeyPressD();
   void handleKeyPressZ();
   void handleKeyPressX();
-
-  void switchToSphericalControls();
-  void switchToFreeControls();
 
   /**
    * Reset coordinates to initial values

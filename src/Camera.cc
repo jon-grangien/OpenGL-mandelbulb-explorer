@@ -3,9 +3,8 @@
 Camera::Camera(unsigned int w, unsigned int h, float near, float far) {
   eye = vec3(0.0f, 0.0f, 1.0f);
   center = vec3(0.0f, 0.0f, 0.0f);
-  eyeTarget = center;
   up = vec3(0.0f, 1.0f, 0.0f);
-  viewMatrix = glm::lookAt(eye, eyeTarget, up);
+  viewMatrix = glm::lookAt(eye, center, up);
   projectionMatrix = glm::perspective(90.0f, (GLfloat) w / (GLfloat) h, near, far);
 };
 
@@ -13,71 +12,80 @@ void Camera::printCoordinates() {
   printf("\nr: %.1f, theta: %.1f, phi: %.1f and x: %.1f, y: %.1f, z: %.1f", r, theta, phi, x, y, z);
 }
 
-void Camera::updateViewMatrix() {
-  viewMatrix = glm::lookAt(eye, eyeTarget, up);
+void Camera::updateCenteredViewMatrix() {
+  viewMatrix = glm::lookAt(eye, center, up);
 }
 
-void Camera::setEyeTargetViewCoordSystem() {
-  vec4 coordSys = vec4(glm::inverse(viewMatrix) * vec4(eyeTarget, 1.0));
-  eyeTarget = vec3(coordSys.x, coordSys.y, coordSys.z);
+vec3 Camera::getViewMatrixBackward() {
+  return vec3(viewMatrix[1][3], viewMatrix[2][3], viewMatrix[3][3]);
+}
+
+vec3 Camera::getViewMatrixForward() {
+  return -getViewMatrixBackward();
+}
+
+void Camera::rotateViewMatrixHorizontally(float a) {
+  viewMatrix = glm::rotate(a, vec3(0.0, 1.0, 0.0)) * viewMatrix;
+}
+
+void Camera::rotateViewMatrixVertically(float a) {
+  viewMatrix = glm::rotate(a, vec3(1.0, 0.0, 0.0)) * viewMatrix;
+}
+
+void Camera::translateViewMatrix(float v) {
+  vec3 tvec = glm::normalize(getViewMatrixForward());
+  tvec = vec3(tvec.x * v, tvec.y * v, tvec.z * v);
+  viewMatrix = glm::translate(tvec) * viewMatrix;
 }
 
 void Camera::handleKeyPressW() {
-  theta -= SPHER_COORDINATES_STEP;
+  theta -= coordTurnStep;
   theta = std::max(0.0f, theta);
   theta = std::min(PI, theta);
 
   if (freeControlsActive)
-    eyeTarget += freeModeTurnStep * up;
+    rotateViewMatrixVertically(-coordTurnStep);
 }
 
 void Camera::handleKeyPressA() {
-  phi -= SPHER_COORDINATES_STEP_DOUBLE;
+  phi -= coordTurnStep * 2.0f;  // Could be optimized by keeping track of doubled step. Requires ImGui callbacks
   phi = std::max(0.0f, phi);
   phi = std::min(TWO_PI, phi);
 
   if (freeControlsActive)
-    eyeTarget -= freeModeTurnStep * (glm::cross(eyeTarget - eye, up));
+    rotateViewMatrixHorizontally(-coordTurnStep);
 }
 
 void Camera::handleKeyPressS() {
-  theta += SPHER_COORDINATES_STEP;
+  theta += coordTurnStep;
   theta = std::max(0.0f, theta);
   theta = std::min(PI, theta);
 
   if (freeControlsActive)
-    eyeTarget -= freeModeTurnStep * up;
+    rotateViewMatrixVertically(coordTurnStep);
 }
 
 void Camera::handleKeyPressD() {
-  phi += SPHER_COORDINATES_STEP_DOUBLE;
+  phi += coordTurnStep * 2.0f;
   phi = std::max(0.0f, phi);
   phi = std::min(TWO_PI, phi);
 
   if (freeControlsActive)
-    eyeTarget += freeModeTurnStep * (glm::cross(eyeTarget - eye, up));
+    rotateViewMatrixHorizontally(coordTurnStep);
 }
 
 void Camera::handleKeyPressZ() {
-  r -= SPHER_COORDINATES_STEP_HALF;
+  r -= coordZoomStep;
 
   if (freeControlsActive)
-    eye += freeModeZoomStep * glm::normalize(eyeTarget - eye);
+    translateViewMatrix(-coordZoomStep);
 }
 
 void Camera::handleKeyPressX() {
-  r += SPHER_COORDINATES_STEP_HALF;
+  r += coordZoomStep;
 
   if (freeControlsActive)
-    eye -= freeModeZoomStep * glm::normalize(eyeTarget - eye);
-}
-
-void Camera::switchToFreeControls() {
-  //setEyeTargetViewCoordSystem();
-}
-
-void Camera::switchToSphericalControls() {
-  eyeTarget = center;
+    translateViewMatrix(coordZoomStep);
 }
 
 void Camera::resetCoords() {
@@ -91,3 +99,4 @@ void Camera::sphericalToCartesian() {
   y = r * sinf(theta) * sinf(phi);
   z = r * cosf(theta);
 }
+

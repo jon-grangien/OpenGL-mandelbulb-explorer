@@ -122,14 +122,6 @@ int main(int argc, char *argv[]) {
 void display() {
   currentTime = (float) glfwGetTime();
 
-  if (cam.previousFreeControlsActive != cam.freeControlsActive) {
-    if (cam.freeControlsActive)
-      cam.switchToFreeControls();
-    else
-      cam.switchToSphericalControls();
-  }
-  cam.previousFreeControlsActive = cam.freeControlsActive;
-
   if (state.logCoordinates) {
     cam.printCoordinates();
     fflush(stdout);
@@ -145,14 +137,14 @@ void display() {
   }
 
   if (shouldUpdateCoordinates) {
+
+    // Calculate centered view matrix every frame for locked spherical coord controls
     if (!cam.freeControlsActive) {
       cam.sphericalToCartesian();
       cam.eye = vec3(cam.y, cam.x, cam.z);
-    } else {
-      //eyeTarget = glm::lookAt(eyeTarget, eye, vec3(0.0, 0.0, 1.0)) *
-      //cam.setEyeTargetViewCoordSystem();
+      cam.updateCenteredViewMatrix();
     }
-    cam.updateViewMatrix();
+
     inverseVP = glm::inverse(cam.viewMatrix) * glm::inverse(cam.projectionMatrix);
 
     shouldUpdateCoordinates = false;
@@ -185,10 +177,8 @@ void display() {
   ImGui::Text("Controls");
   ImGui::Checkbox("FREE MODE", &cam.freeControlsActive);
   ImGui::Checkbox("Auto trip", &cam.constantZoom);
-  ImGui::SliderFloat("Turn step", &cam.freeModeTurnStep, 0.001, 0.01, "%.4f");
-  ImGui::SliderFloat("Zoom step", &cam.freeModeZoomStep, 0.0000001, 0.01, "%.7f");
-  ImGui::Value("(Turn step):", cam.freeModeTurnStep, "%.9f");
-  ImGui::Value("(Zoom step):", cam.freeModeZoomStep, "%.9f");
+  ImGui::SliderFloat("Turn step", &cam.coordTurnStep, 0.001, 0.01, "%.4f");
+  ImGui::SliderFloat("Zoom step", &cam.coordZoomStep, 0.0000001, 0.01, "%.7f");
   ImGui::End();
 
   // Color settings
