@@ -35,6 +35,7 @@ struct FractalUniforms {
   float mandelGFactor = 1.0;
   float mandelBFactor = 3.0;
   vec3 glowColor = vec3(0.75, 0.9, 1.0);
+  float glowFactor = 1.0;
   bool showBgGradient = true;
 
   bool phongShading = true;
@@ -193,6 +194,8 @@ void display() {
   ImGui::ColorEdit3("Bg color", (float*)&u.bgColor);
   ImGui::Checkbox("Bg gradient", &u.showBgGradient);
   ImGui::Separator();
+  ImGui::ColorEdit3("Glow color", (float*)&u.glowColor);
+  ImGui::SliderFloat("Glow strength", &u.glowFactor, 0.0f, 1.0f);
   ImGui::SliderFloat("Mandel R", &u.mandelRFactor, 1.0f, 8.0f);
   ImGui::SliderFloat("Mandel G", &u.mandelGFactor, 1.0f, 8.0f);
   ImGui::SliderFloat("Mandel B", &u.mandelBFactor, 1.0f, 8.0f);
@@ -241,6 +244,7 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_mandelGFactor"), 1, &u.mandelGFactor);
   glUniform1fv(glGetUniformLocation(shader, "u_mandelBFactor"), 1, &u.mandelBFactor);
   glUniform3fv(glGetUniformLocation(shader, "u_glowColor"), 1, glm::value_ptr(u.glowColor));
+  glUniform1fv(glGetUniformLocation(shader, "u_glowFactor"), 1, &u.glowFactor);
   glUniform3fv(glGetUniformLocation(shader, "u_eyePos"), 1, glm::value_ptr(cam.eye));
   glUniform1i(glGetUniformLocation(shader, "u_showBgGradient"), u.showBgGradient);
   glUniform1fv(glGetUniformLocation(shader, "u_noiseFactor"), 1, &u.noiseFactor);

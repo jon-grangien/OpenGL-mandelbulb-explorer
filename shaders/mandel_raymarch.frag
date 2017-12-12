@@ -22,6 +22,7 @@ uniform vec3 u_bgColor;
 uniform vec3 u_mandelColorA;
 uniform vec3 u_mandelColorB;
 uniform vec3 u_glowColor;
+uniform float u_glowFactor;
 uniform bool u_showBgGradient;
 uniform bool u_phongShading;
 uniform float u_ambientIntensity;
@@ -295,7 +296,7 @@ void main() {
     color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_phongShading));
     
     // Mix in fog
-    color = mix(u_glowColor, color, gsValue);
+    color = mix(u_glowFactor * u_glowColor, color, gsValue);
 
     outColor = vec4(color, 1.0);
 }
