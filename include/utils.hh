@@ -170,6 +170,16 @@ void showUsage() {
             << std::endl;
 }
 
+void printInstructions() {
+  std::cout << "Keys:\n"
+            << "Q: Quit\n"
+            << "L: Reload shader files\n"
+            << "WASD: Movement around center\n"
+            << "Z: Zoom out\n"
+            << "X: Zoom in\n"
+            << "R: Reset position\n";
+}
+
 int handleArgs(int c, char *argv[], bool &logCoordinates, bool &weakSettings) {
   for (int i = 1; i < c; ++i) {
     std::string arg = argv[i];

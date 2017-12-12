@@ -21,33 +21,33 @@ unsigned int INITIAL_HEIGHT = 640;
 float NEAR_PLANE = 0.1f;
 float FAR_PLANE = 100.0f;
 
-// Uniform variables
-float maxRaySteps = 1000.0;
-float baseMinDistance = 0.00001;
-float minDistance = baseMinDistance;
-int minDistanceFactor = 0;
-float mandelIters = 1000;
-float bailLimit = 1.8;
-float power = 8.0;
-float noiseFactor = 1.0;
-vec3 bgColor = vec3(0.69, 0.55, 0.76);
-vec3 mandelColorA = vec3(0.9, 0.6, 1.0);
-vec3 mandelColorB = vec3(1.0);
-float mandelRFactor = 1.0;
-float mandelGFactor = 1.0;
-float mandelBFactor = 3.0;
-vec3 glowColor = vec3(0.75, 0.9, 1.0);
-bool showBgGradient = true;
-bool phongShading = true;
+struct FractalUniforms {
+  float maxRaySteps = 1000.0;
+  float baseMinDistance = 0.00001;
+  float minDistance = baseMinDistance;
+  int minDistanceFactor = 0;
+  float mandelIters = 1000;
+  float bailLimit = 1.8;
+  float power = 8.0;
+  float noiseFactor = 1.0;
+  vec3 bgColor = vec3(0.69, 0.55, 0.76);
+  float mandelRFactor = 1.0;
+  float mandelGFactor = 1.0;
+  float mandelBFactor = 3.0;
+  vec3 glowColor = vec3(0.75, 0.9, 1.0);
+  bool showBgGradient = true;
+  bool phongShading = true;
+};
 
 // App state
-auto windowAdapter = Window(INITIAL_WIDTH, INITIAL_HEIGHT);
-bool logCoordinates = false;
-bool weakSettings = false;
-int nbFrames = 0;
-int displayedFrames = 0;
-float displayedMS = 0;
-double lastTime = (float) glfwGetTime();
+struct AppState {
+  bool logCoordinates = false;
+  bool weakSettings = false;
+  int nbFrames = 0;
+  int displayedFrames = 0;
+  float displayedMS = 0;
+  double lastTime = (float) glfwGetTime();
+};
 
 bool shouldUpdateCoordinates = true; // True initially to first set spherical to cartesian
 
@@ -68,28 +68,25 @@ GLfloat currentTime = 0.0;
 GLfloat screenRatio;
 auto screenSize = vec2(0.0);
 
-Camera cam = Camera(INITIAL_WIDTH, INITIAL_HEIGHT, NEAR_PLANE, FAR_PLANE);
+auto windowAdapter = Window(INITIAL_WIDTH, INITIAL_HEIGHT);
+auto cam = Camera(INITIAL_WIDTH, INITIAL_HEIGHT, NEAR_PLANE, FAR_PLANE);
+FractalUniforms u;
+AppState state;
 
 int main(int argc, char *argv[]) {
 
   // Handle args
-  int OK = utils::handleArgs(argc, argv, logCoordinates, weakSettings);
+  int OK = utils::handleArgs(argc, argv, state.logCoordinates, state.weakSettings);
   if (OK < 0) return -1;
 
-  if (weakSettings) {
-    maxRaySteps = 200.0;
-    mandelIters = 100.0;
-    minDistanceFactor = 3;
-    power = 6.0;
+  if (state.weakSettings) {
+    u.maxRaySteps = 200.0;
+    u.mandelIters = 100.0;
+    u.minDistanceFactor = 3;
+    u.power = 6.0;
   }
 
-  std::cout << "Keys:\n"
-            << "Q: Quit\n"
-            << "L: Reload shader files\n"
-            << "WASD: Movement around center\n"
-            << "Z: Zoom out\n"
-            << "X: Zoom in\n"
-            << "R: Reset position\n";
+  utils::printInstructions();
 
   auto glfwOk = windowAdapter.init(resizeCallback, processInput, display);
   auto err = glewInit();
@@ -133,18 +130,18 @@ void display() {
   }
   cam.previousFreeControlsActive = cam.freeControlsActive;
 
-  if (logCoordinates) {
+  if (state.logCoordinates) {
     cam.printCoordinates();
     fflush(stdout);
   }
 
   // Perfomance calculations
-  nbFrames++;
-  if (currentTime - lastTime >= 1.0) {
-    displayedMS = (float) 1000.0 / float(nbFrames);
-    displayedFrames = nbFrames;
-    nbFrames = 0;
-    lastTime += 1.0;
+  state.nbFrames++;
+  if (currentTime - state.lastTime >= 1.0) {
+    state.displayedMS = (float) 1000.0 / float(state.nbFrames);
+    state.displayedFrames = state.nbFrames;
+    state.nbFrames = 0;
+    state.lastTime += 1.0;
   }
 
   if (shouldUpdateCoordinates) {
@@ -167,23 +164,23 @@ void display() {
   //ImGui::SetNextWindowSize(ImVec2(350, 280));
   ImGui::Begin("Settings");
   ImGui::Text("Graphics values");
-  ImGui::SliderFloat("Max ray steps", &maxRaySteps, 5.0f, 4000.0f);
-  ImGui::SliderFloat("Mandel iters", &mandelIters, 1.0f, 3000.0f);
-  ImGui::SliderInt("Min dist factor", &minDistanceFactor, -5, 3);
+  ImGui::SliderFloat("Max ray steps", &u.maxRaySteps, 5.0f, 4000.0f);
+  ImGui::SliderFloat("Mandel iters", &u.mandelIters, 1.0f, 3000.0f);
+  ImGui::SliderInt("Min dist factor", &u.minDistanceFactor, -5, 3);
 
   // Adjust the min distance by a decimal
-  if (minDistanceFactor < 0) {
-    minDistance = baseMinDistance / ((float)(pow(10.0, abs(minDistanceFactor))));
-  } else if (minDistanceFactor > 0) {
-    minDistance = baseMinDistance * ((float)(pow(10.0, minDistanceFactor)));
+  if (u.minDistanceFactor < 0) {
+    u.minDistance = u.baseMinDistance / ((float)(pow(10.0, abs(u.minDistanceFactor))));
+  } else if (u.minDistanceFactor > 0) {
+    u.minDistance = u.baseMinDistance * ((float)(pow(10.0, u.minDistanceFactor)));
   } else {
-    minDistance = baseMinDistance;
+    u.minDistance = u.baseMinDistance;
   }
 
-  ImGui::SliderFloat("Bailout", &bailLimit, 1.0f, 1.81f);
-  ImGui::SliderFloat("Power", &power, 1.0f, 32.0f);
-  ImGui::Checkbox("Light source", &phongShading);
-  ImGui::Value("(Min dist):", minDistance, "%.9f");
+  ImGui::SliderFloat("Bailout", &u.bailLimit, 1.0f, 1.81f);
+  ImGui::SliderFloat("Power", &u.power, 1.0f, 32.0f);
+  ImGui::Checkbox("Light source", &u.phongShading);
+  ImGui::Value("(Min dist):", u.minDistance, "%.9f");
   ImGui::Separator();
   ImGui::Text("Controls");
   ImGui::Checkbox("FREE MODE", &cam.freeControlsActive);
@@ -197,21 +194,21 @@ void display() {
   // Color settings
   ImGui::Begin("Colors");
   //ImGui::ShowStyleEditor();
-  ImGui::ColorEdit3("Bg color", (float*)&bgColor);
-  ImGui::Checkbox("Bg gradient", &showBgGradient);
+  ImGui::ColorEdit3("Bg color", (float*)&u.bgColor);
+  ImGui::Checkbox("Bg gradient", &u.showBgGradient);
   ImGui::Separator();
-  ImGui::SliderFloat("Mandel R", &mandelRFactor, 1.0f, 8.0f);
-  ImGui::SliderFloat("Mandel G", &mandelGFactor, 1.0f, 8.0f);
-  ImGui::SliderFloat("Mandel B", &mandelBFactor, 1.0f, 8.0f);
-  ImGui::SliderFloat("Noise", &noiseFactor, 0.0f, 1.0f);
+  ImGui::SliderFloat("Mandel R", &u.mandelRFactor, 1.0f, 8.0f);
+  ImGui::SliderFloat("Mandel G", &u.mandelGFactor, 1.0f, 8.0f);
+  ImGui::SliderFloat("Mandel B", &u.mandelBFactor, 1.0f, 8.0f);
+  ImGui::SliderFloat("Noise", &u.noiseFactor, 0.0f, 1.0f);
   ImGui::End();
 
   // Stats
   ImGui::SetNextWindowPos(ImVec2(0, windowAdapter.getHeight()), 0, ImVec2(0.0, 1.0));
   ImGui::SetNextWindowSize(ImVec2(140, 80));
   ImGui::Begin("State");
-  ImGui::Value("FPS", displayedFrames);
-  ImGui::Value("ms/frame", displayedMS);
+  ImGui::Value("FPS", state.displayedFrames);
+  ImGui::Value("ms/frame", state.displayedMS);
   ImGui::End();
 
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -228,20 +225,20 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_stepSize"), 1, &STEP_SIZE);
 
   // Mandel setup
-  glUniform1fv(glGetUniformLocation(shader, "u_maxRaySteps"), 1, &maxRaySteps);
-  glUniform1fv(glGetUniformLocation(shader, "u_minDistance"), 1, &minDistance);
-  glUniform1fv(glGetUniformLocation(shader, "u_mandelIters"), 1, &mandelIters);
-  glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &bailLimit);
-  glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &power);
-  glUniform1i(glGetUniformLocation(shader, "u_phongShading"), phongShading);
-  glUniform3fv(glGetUniformLocation(shader, "u_bgColor"), 1, glm::value_ptr(bgColor));
-  glUniform1fv(glGetUniformLocation(shader, "u_mandelRFactor"), 1, &mandelRFactor);
-  glUniform1fv(glGetUniformLocation(shader, "u_mandelGFactor"), 1, &mandelGFactor);
-  glUniform1fv(glGetUniformLocation(shader, "u_mandelBFactor"), 1, &mandelBFactor);
-  glUniform3fv(glGetUniformLocation(shader, "u_glowColor"), 1, glm::value_ptr(glowColor));
+  glUniform1fv(glGetUniformLocation(shader, "u_maxRaySteps"), 1, &u.maxRaySteps);
+  glUniform1fv(glGetUniformLocation(shader, "u_minDistance"), 1, &u.minDistance);
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelIters"), 1, &u.mandelIters);
+  glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &u.bailLimit);
+  glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &u.power);
+  glUniform1i(glGetUniformLocation(shader, "u_phongShading"), u.phongShading);
+  glUniform3fv(glGetUniformLocation(shader, "u_bgColor"), 1, glm::value_ptr(u.bgColor));
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelRFactor"), 1, &u.mandelRFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelGFactor"), 1, &u.mandelGFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelBFactor"), 1, &u.mandelBFactor);
+  glUniform3fv(glGetUniformLocation(shader, "u_glowColor"), 1, glm::value_ptr(u.glowColor));
   glUniform3fv(glGetUniformLocation(shader, "u_eyePos"), 1, glm::value_ptr(cam.eye));
-  glUniform1i(glGetUniformLocation(shader, "u_showBgGradient"), showBgGradient);
-  glUniform1fv(glGetUniformLocation(shader, "u_noiseFactor"), 1, &noiseFactor);
+  glUniform1i(glGetUniformLocation(shader, "u_showBgGradient"), u.showBgGradient);
+  glUniform1fv(glGetUniformLocation(shader, "u_noiseFactor"), 1, &u.noiseFactor);
 }
 
 void resizeCallback(GLFWwindow *win, int w, int h) {
@@ -309,7 +306,7 @@ void processInput(GLFWwindow *window) {
 
 void setGuiStyle() {
   ImVec4* colors = ImGui::GetStyle().Colors;
-  vec3 bgLow = 0.7f * vec3(bgColor.r, bgColor.g, bgColor.b);
+  vec3 bgLow = 0.7f * vec3(u.bgColor.r, u.bgColor.g, u.bgColor.b);
 
   colors[ImGuiCol_WindowBg]               = ImVec4(0.94f, 0.94f, 0.94f, 0.55f);
   colors[ImGuiCol_Border]                 = ImVec4(0.60f, 0.23f, 0.23f, 0.00f);
