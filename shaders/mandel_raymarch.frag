@@ -274,29 +274,28 @@ void main() {
     // Ray miss; bg plane color
     if (gsValue < LOW_P_ZERO) {
         color = u_showBgGradient ? mix(u_bgColor, u_bgColor*0.8, uv.y) : u_bgColor;
+        outColor = vec4(color, 1.0);
+        return;
+    }
 
     // Ray hit
-    } else if (gsValue > 0.1) {
-        float noise = snoise(5.0 * mandelPos);
-        noise += 0.5 * snoise(10.0 * mandelPos);
-        noise += 0.25 * snoise(20.0 * mandelPos);
-        noise = u_noiseFactor * noise;
-        float timeVariance = 0.1 * abs(sin(0.6 * u_time));
+    float noise = snoise(5.0 * mandelPos);
+    noise += 0.5 * snoise(10.0 * mandelPos);
+    noise += 0.25 * snoise(20.0 * mandelPos);
+    noise = u_noiseFactor * noise;
+    float timeVariance = 0.1 * abs(sin(0.6 * u_time));
 
-        float r = stepsTaken*u_mandelRFactor/u_maxRaySteps;
-        float g = stepsTaken*u_mandelGFactor/u_maxRaySteps;
-        float b = stepsTaken*u_mandelBFactor/u_maxRaySteps;
-        r = min(1.0, r + timeVariance);
-        g = min(1.0, g);
-        b = min(1.0, b);
-        color = vec3(r, g, b) - 0.08 * u_noiseFactor * noise;
-        color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_phongShading));
-
-
-    // Fog applied
-    } else {
-      color = mix(u_glowColor, vec3(gsValue), gsValue);
-    }
+    float r = stepsTaken*u_mandelRFactor/u_maxRaySteps;
+    float g = stepsTaken*u_mandelGFactor/u_maxRaySteps;
+    float b = stepsTaken*u_mandelBFactor/u_maxRaySteps;
+    r = min(1.0, r + timeVariance);
+    g = min(1.0, g);
+    b = min(1.0, b);
+    color = vec3(r, g, b) - 0.08 * u_noiseFactor * noise;
+    color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_phongShading));
+    
+    // Mix in fog
+    color = mix(u_glowColor, color, gsValue);
 
     outColor = vec4(color, 1.0);
 }
