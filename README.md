@@ -21,6 +21,8 @@ Controls:
 
 ```
 
+Tick the "FREE MODE" box to enter free roaming mode, where wasd changes view direction relative to position.
+
 ## Environment
 Built for Linux and tested on Arch Linux. Mac support limitedly implemented. Windows not implemented due to lack of interest. PR required.
 

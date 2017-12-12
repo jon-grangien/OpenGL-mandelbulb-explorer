@@ -17,13 +17,18 @@ void Camera::updateViewMatrix() {
   viewMatrix = glm::lookAt(eye, eyeTarget, up);
 }
 
+void Camera::setEyeTargetViewCoordSystem() {
+  vec4 coordSys = vec4(glm::inverse(viewMatrix) * vec4(eyeTarget, 1.0));
+  eyeTarget = vec3(coordSys.x, coordSys.y, coordSys.z);
+}
+
 void Camera::handleKeyPressW() {
   theta -= SPHER_COORDINATES_STEP;
   theta = std::max(0.0f, theta);
   theta = std::min(PI, theta);
 
   if (freeControlsActive)
-    eyeTarget.y += freeModeTurnStep;
+    eyeTarget += freeModeTurnStep * up;
 }
 
 void Camera::handleKeyPressA() {
@@ -32,7 +37,7 @@ void Camera::handleKeyPressA() {
   phi = std::min(TWO_PI, phi);
 
   if (freeControlsActive)
-    eyeTarget.x -= freeModeTurnStep;
+    eyeTarget -= freeModeTurnStep * (glm::cross(eyeTarget - eye, up));
 }
 
 void Camera::handleKeyPressS() {
@@ -41,7 +46,7 @@ void Camera::handleKeyPressS() {
   theta = std::min(PI, theta);
 
   if (freeControlsActive)
-    eyeTarget.y -= freeModeTurnStep;
+    eyeTarget -= freeModeTurnStep * up;
 }
 
 void Camera::handleKeyPressD() {
@@ -50,21 +55,29 @@ void Camera::handleKeyPressD() {
   phi = std::min(TWO_PI, phi);
 
   if (freeControlsActive)
-    eyeTarget.x += freeModeTurnStep;
+    eyeTarget += freeModeTurnStep * (glm::cross(eyeTarget - eye, up));
 }
 
 void Camera::handleKeyPressZ() {
   r -= SPHER_COORDINATES_STEP_HALF;
 
   if (freeControlsActive)
-    eye += freeModeTurnStep * glm::normalize(eyeTarget + eye);
+    eye += freeModeZoomStep * glm::normalize(eyeTarget - eye);
 }
 
 void Camera::handleKeyPressX() {
   r += SPHER_COORDINATES_STEP_HALF;
 
   if (freeControlsActive)
-    eye -= freeModeTurnStep * glm::normalize(eyeTarget + eye);
+    eye -= freeModeZoomStep * glm::normalize(eyeTarget - eye);
+}
+
+void Camera::switchToFreeControls() {
+  //setEyeTargetViewCoordSystem();
+}
+
+void Camera::switchToSphericalControls() {
+  eyeTarget = center;
 }
 
 void Camera::resetCoords() {

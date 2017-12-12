@@ -13,8 +13,6 @@
 void resizeCallback(GLFWwindow *win, int w, int h);
 void processInput(GLFWwindow *window);
 void display();
-void switchToSphericalControls();
-void switchToFreeControls();
 void setGuiStyle();
 
 float STEP_SIZE = 0.001f;
@@ -23,7 +21,7 @@ unsigned int INITIAL_HEIGHT = 640;
 float NEAR_PLANE = 0.1f;
 float FAR_PLANE = 100.0f;
 
-// Arg variables
+// Uniform variables
 float maxRaySteps = 1000.0;
 float baseMinDistance = 0.00001;
 float minDistance = baseMinDistance;
@@ -44,7 +42,6 @@ bool phongShading = true;
 
 // App state
 auto windowAdapter = Window(INITIAL_WIDTH, INITIAL_HEIGHT);
-bool logPerformance = false;
 bool logCoordinates = false;
 bool weakSettings = false;
 int nbFrames = 0;
@@ -65,8 +62,6 @@ const GLfloat quadArray[4][2] = {
     {1.0f, 1.0f}
 };
 mat4x2 quad = glm::make_mat4x2(&quadArray[0][0]);
-
-// Do in main
 mat4 inverseVP;
 
 GLfloat currentTime = 0.0;
@@ -130,13 +125,13 @@ int main(int argc, char *argv[]) {
 void display() {
   currentTime = (float) glfwGetTime();
 
-  //if (previousFreeControlsActive != freeControlsActive) {
-  //  if (freeControlsActive)
-  //    switchToFreeControls();
-  //  else
-  //    switchToSphericalControls();
-  //}
-  //previousFreeControlsActive = freeControlsActive;
+  if (cam.previousFreeControlsActive != cam.freeControlsActive) {
+    if (cam.freeControlsActive)
+      cam.switchToFreeControls();
+    else
+      cam.switchToSphericalControls();
+  }
+  cam.previousFreeControlsActive = cam.freeControlsActive;
 
   if (logCoordinates) {
     cam.printCoordinates();
@@ -157,7 +152,8 @@ void display() {
       cam.sphericalToCartesian();
       cam.eye = vec3(cam.y, cam.x, cam.z);
     } else {
-      //eyeTarget = glm::lookAt(eyeTarget, eye, vec3(0.0, 0.0, 1.0)) * 
+      //eyeTarget = glm::lookAt(eyeTarget, eye, vec3(0.0, 0.0, 1.0)) *
+      //cam.setEyeTargetViewCoordSystem();
     }
     cam.updateViewMatrix();
     inverseVP = glm::inverse(cam.viewMatrix) * glm::inverse(cam.projectionMatrix);
@@ -168,7 +164,7 @@ void display() {
   setGuiStyle();
 
   // Graphics settings
-  ImGui::SetNextWindowSize(ImVec2(350, 180));
+  //ImGui::SetNextWindowSize(ImVec2(350, 280));
   ImGui::Begin("Settings");
   ImGui::Text("Graphics values");
   ImGui::SliderFloat("Max ray steps", &maxRaySteps, 5.0f, 4000.0f);
@@ -191,7 +187,11 @@ void display() {
   ImGui::Separator();
   ImGui::Text("Controls");
   ImGui::Checkbox("FREE MODE", &cam.freeControlsActive);
-  ImGui::SliderFloat("Turn step", &cam.freeModeTurnStep, 0.00001, 0.001);
+  ImGui::Checkbox("Auto trip", &cam.constantZoom);
+  ImGui::SliderFloat("Turn step", &cam.freeModeTurnStep, 0.001, 0.01, "%.4f");
+  ImGui::SliderFloat("Zoom step", &cam.freeModeZoomStep, 0.0000001, 0.01, "%.7f");
+  ImGui::Value("(Turn step):", cam.freeModeTurnStep, "%.9f");
+  ImGui::Value("(Zoom step):", cam.freeModeZoomStep, "%.9f");
   ImGui::End();
 
   // Color settings
@@ -255,15 +255,8 @@ void resizeCallback(GLFWwindow *win, int w, int h) {
   inverseVP = glm::inverse(cam.viewMatrix) * glm::inverse(cam.projectionMatrix);
 }
 
-void switchToFreeControls() {
-  cam.eyeTarget = cam.center;
-  //...
-}
-
-void switchToSphericalControls() {
-  cam.eyeTarget = cam.center;
-}
-
+// Process input keys concurrently of each other
+// This is harder to do with a normal key callback function
 void processInput(GLFWwindow *window) {
 
   // Close
@@ -276,7 +269,6 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
     shader = utils::loadShaders("../shaders/mandel_raymarch.vert", "../shaders/mandel_raymarch.frag");
 
-  // TODO: Switch statement
   // Movement
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
@@ -298,7 +290,7 @@ void processInput(GLFWwindow *window) {
     cam.handleKeyPressD();
   }
 
-  if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+  if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS || cam.constantZoom) {
     shouldUpdateCoordinates = true;
     cam.handleKeyPressZ();
   }
@@ -311,6 +303,7 @@ void processInput(GLFWwindow *window) {
   // Reset camera
   if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
     shouldUpdateCoordinates = true;
+    cam.resetCoords();
   }
 }
 

@@ -23,9 +23,11 @@ class Camera {
 
  public:
   float x = 0.0f, y = 0.0f, z = 0.0f;
-  float freeModeTurnStep = 0.0001f;
+  float freeModeTurnStep = 0.001f;
+  float freeModeZoomStep = 0.00005f;
   bool freeControlsActive = false;
   bool previousFreeControlsActive = false;
+  bool constantZoom = false;
 
   vec3 eye;
   vec3 center;
@@ -46,6 +48,7 @@ class Camera {
    * Recalculate view matrix with viewer
    */
   void updateViewMatrix();
+  void setEyeTargetViewCoordSystem();
 
   // Key press handlers
   void handleKeyPressW();
@@ -54,6 +57,9 @@ class Camera {
   void handleKeyPressD();
   void handleKeyPressZ();
   void handleKeyPressX();
+
+  void switchToSphericalControls();
+  void switchToFreeControls();
 
   /**
    * Reset coordinates to initial values
