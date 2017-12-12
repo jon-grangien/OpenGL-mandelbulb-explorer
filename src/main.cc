@@ -36,7 +36,13 @@ struct FractalUniforms {
   float mandelBFactor = 3.0;
   vec3 glowColor = vec3(0.75, 0.9, 1.0);
   bool showBgGradient = true;
+
   bool phongShading = true;
+  float ambientIntensity = 1.0;
+  float diffuseIntensity = 1.0;
+  float specularIntensity = 1.0;
+  float shininess = 32.0;
+  bool gammaCorrection = false;
 };
 
 // App state
@@ -191,6 +197,15 @@ void display() {
   ImGui::SliderFloat("Mandel G", &u.mandelGFactor, 1.0f, 8.0f);
   ImGui::SliderFloat("Mandel B", &u.mandelBFactor, 1.0f, 8.0f);
   ImGui::SliderFloat("Noise", &u.noiseFactor, 0.0f, 1.0f);
+  if (u.phongShading) {
+    ImGui::Separator();
+    ImGui::Text("Blinn-phong shading (if light src)");
+    ImGui::SliderFloat("Ambient", &u.ambientIntensity, 0.0f, 1.0f);
+    ImGui::SliderFloat("Diffuse", &u.diffuseIntensity, 0.0f, 1.0f);
+    ImGui::SliderFloat("Specular", &u.specularIntensity, 0.0f, 1.0f);
+    ImGui::SliderFloat("Shininess", &u.shininess, 0.0f, 64.0f);
+    ImGui::Checkbox("Gamma correction", &u.gammaCorrection);
+  }
   ImGui::End();
 
   // Stats
@@ -229,6 +244,11 @@ void display() {
   glUniform3fv(glGetUniformLocation(shader, "u_eyePos"), 1, glm::value_ptr(cam.eye));
   glUniform1i(glGetUniformLocation(shader, "u_showBgGradient"), u.showBgGradient);
   glUniform1fv(glGetUniformLocation(shader, "u_noiseFactor"), 1, &u.noiseFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_ambientIntensity"), 1, &u.ambientIntensity);
+  glUniform1fv(glGetUniformLocation(shader, "u_diffuseIntensity"), 1, &u.diffuseIntensity);
+  glUniform1fv(glGetUniformLocation(shader, "u_specularIntensity"), 1, &u.specularIntensity);
+  glUniform1fv(glGetUniformLocation(shader, "u_shininess"), 1, &u.shininess);
+  glUniform1i(glGetUniformLocation(shader, "u_gammaCorrection"), u.gammaCorrection);
 }
 
 void resizeCallback(GLFWwindow *win, int w, int h) {

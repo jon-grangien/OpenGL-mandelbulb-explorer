@@ -24,7 +24,12 @@ uniform vec3 u_mandelColorB;
 uniform vec3 u_glowColor;
 uniform bool u_showBgGradient;
 uniform bool u_phongShading;
+uniform float u_ambientIntensity;
+uniform float u_diffuseIntensity;
+uniform float u_specularIntensity;
+uniform float u_shininess;
 uniform float u_noiseFactor;
+uniform bool u_gammaCorrection;
 
 out vec4 outColor;
 
@@ -233,9 +238,6 @@ vec3 calculateBlinnPhong(vec3 diffColor, vec3 p, vec3 rayDir) {
     vec3 ambientColor = diffColor * 0.8;
     const vec3 lightColor = vec3(1.0);
     const vec3 specColor = vec3(1.0);
-    const float ambIntensity  = 1.0;
-    const float diffIntensity = 1.0;
-    const float specIntensity = 1.0;
     const float screenGamma   = 2.2;
 
     vec3 normal = calculateNormal(p);
@@ -248,17 +250,17 @@ vec3 calculateBlinnPhong(vec3 diffColor, vec3 p, vec3 rayDir) {
     vec3 H = normalize(lightVec + eyeVec);
 
     float lightPower = 0.4;
-    float shininess  = 32.0;
 
     float lambertian = max(dot(lightVec, normal), 0.0);
     float specular = max(dot(H, normal), 0.0);
-    specular = pow(specular, shininess);
+    specular = pow(specular, u_shininess);
 
-    vec3 BPColor = ambIntensity * ambientColor +
-        diffIntensity * diffColor * lambertian * lightColor * lightPower / distance +
-        specIntensity * specColor * specular * lightColor * lightPower / distance;
+    vec3 BPColor = u_ambientIntensity * ambientColor +
+        u_diffuseIntensity * diffColor * lambertian * lightColor * lightPower / distance +
+        u_specularIntensity * specColor * specular * lightColor * lightPower / distance;
 
-    return pow(BPColor, vec3(1.0/screenGamma));
+    // With gamma correction if we assume ambient-, diff-, specColor have been linearized
+    return mix(BPColor, pow(BPColor, vec3(1.0/screenGamma)), float(u_gammaCorrection));
 }
 
 void main() {
@@ -281,17 +283,15 @@ void main() {
         noise = u_noiseFactor * noise;
         float timeVariance = 0.1 * abs(sin(0.6 * u_time));
 
-        //vec3 c1 = vec3(u_mandelColorA.r * timeVariance, u_mandelColorA.g - noise, u_mandelColorA.b);
-        //vec3 c2 = u_mandelColorB - 0.05 * noise;
-        //color = mix(c1, c2, gsValue);
-        float r = stepsTaken*u_mandelRFactor/u_maxRaySteps - 0.08 * noise;
-        float g = stepsTaken*u_mandelGFactor/u_maxRaySteps - 0.08 * noise;
-        float b = stepsTaken*u_mandelBFactor/u_maxRaySteps - 0.08 * noise;
+        float r = stepsTaken*u_mandelRFactor/u_maxRaySteps;
+        float g = stepsTaken*u_mandelGFactor/u_maxRaySteps;
+        float b = stepsTaken*u_mandelBFactor/u_maxRaySteps;
         r = min(1.0, r + timeVariance);
         g = min(1.0, g);
         b = min(1.0, b);
-        color = vec3(r, g, b);
-        color = u_phongShading ? calculateBlinnPhong(color, mandelPos, vertRayDirection) : color;
+        color = vec3(r, g, b) - 0.08 * u_noiseFactor * noise;
+        color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_phongShading));
+
 
     // Fog applied
     } else {
