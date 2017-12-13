@@ -298,6 +298,9 @@ void main() {
     // Mix in glow
     color = mix(u_glowFactor * u_glowColor, color, gsValue);
 
+    // Dead pixels removal
+    color = (clamp(color,0.,1.));
+
     // AO?
     //color = mix(0.2 * color, color, gsValue);
 

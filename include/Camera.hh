@@ -14,7 +14,7 @@
 class Camera {
 
   // Coordinates for viewer
-  float defaultR = 1.3f, defaultTheta = 0.0f, defaultPhi = 0.0f;
+  float defaultR = 3.0f, defaultTheta = 0.0f, defaultPhi = 0.0f;
   float r = defaultR;
   float theta = defaultTheta;
   float phi = defaultPhi;

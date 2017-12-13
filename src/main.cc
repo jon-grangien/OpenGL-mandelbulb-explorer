@@ -13,6 +13,7 @@
 void resizeCallback(GLFWwindow *win, int w, int h);
 void processInput(GLFWwindow *window);
 void display();
+void renderGui();
 void setGuiStyle();
 
 float STEP_SIZE = 0.001f;
@@ -20,8 +21,8 @@ unsigned int INITIAL_WIDTH = 800;
 unsigned int INITIAL_HEIGHT = 640;
 //float NEAR_PLANE = -10.0f;
 //float FAR_PLANE = 1.0f;
-float NEAR_PLANE = 0.1f;
-float FAR_PLANE = 100.0f;
+float NEAR_PLANE = -0.1f;
+float FAR_PLANE = -100.0f;
 float FOV = 50.0f;
 
 struct FractalUniforms {
@@ -57,6 +58,9 @@ struct AppState {
   int displayedFrames = 0;
   float displayedMS = 0;
   double lastTime = (float) glfwGetTime();
+
+  bool showGui = true;
+  float timeSinceLastGuiToggle = 0.0f;
 };
 
 bool shouldUpdateCoordinates = true; // True initially to first set spherical to cartesian
@@ -160,7 +164,48 @@ void display() {
     shouldUpdateCoordinates = false;
   }
 
-  setGuiStyle();
+  if (state.showGui) {
+    setGuiStyle();
+    renderGui();
+  }
+
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+  glUseProgram(shader);
+  glUniformMatrix4fv(glGetUniformLocation(shader, "u_inverseVP"), 1, GL_FALSE, glm::value_ptr(inverseVP));
+  glUniform1fv(glGetUniformLocation(shader, "u_nearPlane"), 1, &NEAR_PLANE);
+  glUniform1fv(glGetUniformLocation(shader, "u_farPlane"), 1, &FAR_PLANE);
+  glUniform1fv(glGetUniformLocation(shader, "u_time"), 1, &currentTime);
+  glUniform1fv(glGetUniformLocation(shader, "u_screenRatio"), 1, &screenRatio);
+  glUniform2fv(glGetUniformLocation(shader, "u_screenSize"), 1, glm::value_ptr(screenSize));
+  glUniform1fv(glGetUniformLocation(shader, "u_stepSize"), 1, &STEP_SIZE);
+
+  // Mandel setup
+  glUniform1fv(glGetUniformLocation(shader, "u_maxRaySteps"), 1, &u.maxRaySteps);
+  glUniform1fv(glGetUniformLocation(shader, "u_minDistance"), 1, &u.minDistance);
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelIters"), 1, &u.mandelIters);
+  glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &u.bailLimit);
+  glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &u.power);
+  glUniform1i(glGetUniformLocation(shader, "u_phongShading"), u.phongShading);
+  glUniform3fv(glGetUniformLocation(shader, "u_bgColor"), 1, glm::value_ptr(u.bgColor));
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelRFactor"), 1, &u.mandelRFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelGFactor"), 1, &u.mandelGFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelBFactor"), 1, &u.mandelBFactor);
+  glUniform3fv(glGetUniformLocation(shader, "u_glowColor"), 1, glm::value_ptr(u.glowColor));
+  glUniform1fv(glGetUniformLocation(shader, "u_glowFactor"), 1, &u.glowFactor);
+  glUniform3fv(glGetUniformLocation(shader, "u_eyePos"), 1, glm::value_ptr(cam.eye));
+  glUniform1i(glGetUniformLocation(shader, "u_showBgGradient"), u.showBgGradient);
+  glUniform1fv(glGetUniformLocation(shader, "u_noiseFactor"), 1, &u.noiseFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_ambientIntensity"), 1, &u.ambientIntensity);
+  glUniform1fv(glGetUniformLocation(shader, "u_diffuseIntensity"), 1, &u.diffuseIntensity);
+  glUniform1fv(glGetUniformLocation(shader, "u_specularIntensity"), 1, &u.specularIntensity);
+  glUniform1fv(glGetUniformLocation(shader, "u_shininess"), 1, &u.shininess);
+  glUniform1i(glGetUniformLocation(shader, "u_gammaCorrection"), u.gammaCorrection);
+}
+
+void renderGui() {
 
   // Graphics settings
   //ImGui::SetNextWindowSize(ImVec2(350, 280));
@@ -231,41 +276,6 @@ void display() {
   ImGui::Value("FPS", state.displayedFrames);
   ImGui::Value("ms/frame", state.displayedMS);
   ImGui::End();
-
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-  glUseProgram(shader);
-  glUniformMatrix4fv(glGetUniformLocation(shader, "u_inverseVP"), 1, GL_FALSE, glm::value_ptr(inverseVP));
-  glUniform1fv(glGetUniformLocation(shader, "u_nearPlane"), 1, &NEAR_PLANE);
-  glUniform1fv(glGetUniformLocation(shader, "u_farPlane"), 1, &FAR_PLANE);
-  glUniform1fv(glGetUniformLocation(shader, "u_time"), 1, &currentTime);
-  glUniform1fv(glGetUniformLocation(shader, "u_screenRatio"), 1, &screenRatio);
-  glUniform2fv(glGetUniformLocation(shader, "u_screenSize"), 1, glm::value_ptr(screenSize));
-  glUniform1fv(glGetUniformLocation(shader, "u_stepSize"), 1, &STEP_SIZE);
-
-  // Mandel setup
-  glUniform1fv(glGetUniformLocation(shader, "u_maxRaySteps"), 1, &u.maxRaySteps);
-  glUniform1fv(glGetUniformLocation(shader, "u_minDistance"), 1, &u.minDistance);
-  glUniform1fv(glGetUniformLocation(shader, "u_mandelIters"), 1, &u.mandelIters);
-  glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &u.bailLimit);
-  glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &u.power);
-  glUniform1i(glGetUniformLocation(shader, "u_phongShading"), u.phongShading);
-  glUniform3fv(glGetUniformLocation(shader, "u_bgColor"), 1, glm::value_ptr(u.bgColor));
-  glUniform1fv(glGetUniformLocation(shader, "u_mandelRFactor"), 1, &u.mandelRFactor);
-  glUniform1fv(glGetUniformLocation(shader, "u_mandelGFactor"), 1, &u.mandelGFactor);
-  glUniform1fv(glGetUniformLocation(shader, "u_mandelBFactor"), 1, &u.mandelBFactor);
-  glUniform3fv(glGetUniformLocation(shader, "u_glowColor"), 1, glm::value_ptr(u.glowColor));
-  glUniform1fv(glGetUniformLocation(shader, "u_glowFactor"), 1, &u.glowFactor);
-  glUniform3fv(glGetUniformLocation(shader, "u_eyePos"), 1, glm::value_ptr(cam.eye));
-  glUniform1i(glGetUniformLocation(shader, "u_showBgGradient"), u.showBgGradient);
-  glUniform1fv(glGetUniformLocation(shader, "u_noiseFactor"), 1, &u.noiseFactor);
-  glUniform1fv(glGetUniformLocation(shader, "u_ambientIntensity"), 1, &u.ambientIntensity);
-  glUniform1fv(glGetUniformLocation(shader, "u_diffuseIntensity"), 1, &u.diffuseIntensity);
-  glUniform1fv(glGetUniformLocation(shader, "u_specularIntensity"), 1, &u.specularIntensity);
-  glUniform1fv(glGetUniformLocation(shader, "u_shininess"), 1, &u.shininess);
-  glUniform1i(glGetUniformLocation(shader, "u_gammaCorrection"), u.gammaCorrection);
 }
 
 void resizeCallback(GLFWwindow *win, int w, int h) {
@@ -288,6 +298,15 @@ void processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, true);
   if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
+
+  if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+
+    // Disable toggle within small time window to avoid flickering in high fps
+    if (std::abs(currentTime - state.timeSinceLastGuiToggle) > 0.15) {
+      state.showGui = !state.showGui;
+      state.timeSinceLastGuiToggle = currentTime;
+    }
+  }
 
   // Reload shader
   if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)

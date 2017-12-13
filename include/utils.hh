@@ -177,7 +177,8 @@ void printInstructions() {
             << "WASD: Movement around center\n"
             << "Z: Zoom out\n"
             << "X: Zoom in\n"
-            << "R: Reset position\n";
+            << "R: Reset position\n"
+            << "G: Show/hide GUI\n";
 }
 
 int handleArgs(int c, char *argv[], bool &logCoordinates, bool &weakSettings) {
