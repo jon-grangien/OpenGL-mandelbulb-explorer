@@ -235,13 +235,23 @@ vec3 calculateNormal(vec3 p) {
     return normalize(grad);
 }
 
+// https://www.shadertoy.com/view/XtjSDK
+vec3 calcNormal(in vec3 pos) {
+    vec3 eps = vec3(0.005,0.0,0.0);
+	return normalize( vec3(
+       DEMandelBulb(pos+eps.xyy) - DEMandelBulb(pos-eps.xyy),
+       DEMandelBulb(pos+eps.yxy) - DEMandelBulb(pos-eps.yxy),
+       DEMandelBulb(pos+eps.yyx) - DEMandelBulb(pos-eps.yyx)
+    ));
+}
+
 vec3 calculateBlinnPhong(vec3 diffColor, vec3 p, vec3 rayDir) {
     vec3 ambientColor = diffColor * 0.8;
     const vec3 lightColor = vec3(1.0);
     const vec3 specColor = vec3(1.0);
     const float screenGamma   = 2.2;
 
-    vec3 normal = calculateNormal(p);
+    vec3 normal = calcNormal(p);
 
     vec3 eyeVec = u_eyePos - p;
     float distance = length(eyeVec);
