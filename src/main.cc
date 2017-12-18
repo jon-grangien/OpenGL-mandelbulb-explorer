@@ -33,6 +33,7 @@ struct FractalUniforms {
   float mandelIters = 1000;
   float bailLimit = 5.0;
   float power = 8.0;
+  float fudgeFactor = 1.0;
   float noiseFactor = 1.0;
   vec3 bgColor = vec3(0.69, 0.55, 0.76);
   float mandelRFactor = 1.0;
@@ -198,6 +199,7 @@ void display() {
   glUniform3fv(glGetUniformLocation(shader, "u_eyePos"), 1, glm::value_ptr(cam.eye));
   glUniform1i(glGetUniformLocation(shader, "u_showBgGradient"), u.showBgGradient);
   glUniform1fv(glGetUniformLocation(shader, "u_noiseFactor"), 1, &u.noiseFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_fudgeFactor"), 1, &u.fudgeFactor);
   glUniform1fv(glGetUniformLocation(shader, "u_ambientIntensity"), 1, &u.ambientIntensity);
   glUniform1fv(glGetUniformLocation(shader, "u_diffuseIntensity"), 1, &u.diffuseIntensity);
   glUniform1fv(glGetUniformLocation(shader, "u_specularIntensity"), 1, &u.specularIntensity);
@@ -226,6 +228,7 @@ void renderGui() {
 
   ImGui::SliderFloat("Bailout", &u.bailLimit, 1.0f, 10.0f);
   ImGui::SliderFloat("Power", &u.power, 1.0f, 32.0f);
+  ImGui::SliderFloat("\"Fudge\"", &u.fudgeFactor, 0.0f, 1.0f);
   ImGui::Checkbox("Light source", &u.phongShading);
   ImGui::Value("(Min dist):", u.minDistance, "%.9f");
   ImGui::Separator();

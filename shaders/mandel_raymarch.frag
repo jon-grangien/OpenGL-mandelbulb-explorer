@@ -13,6 +13,7 @@ uniform float u_minDistance;
 uniform float u_mandelIters;
 uniform float u_bailLimit;
 uniform float u_power;
+uniform float u_fudgeFactor;
 
 uniform float u_mandelRFactor;
 uniform float u_mandelGFactor;
@@ -200,7 +201,7 @@ float DEMandelBulb(vec3 pos) {
 
 		z += pos;
 	}
-	return 0.5*log(r)*r/dr;
+	return u_fudgeFactor * 0.5 * log(r) * r / dr;
 }
 
 // March with distance estimate and return grayscale value
