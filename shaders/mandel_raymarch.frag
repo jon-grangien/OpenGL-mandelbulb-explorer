@@ -10,7 +10,7 @@ uniform vec3 u_eyePos;
 
 uniform float u_maxRaySteps;
 uniform float u_minDistance;
-uniform float u_mandelIters;
+uniform int u_mandelIters;
 uniform float u_bailLimit;
 uniform float u_power;
 uniform float u_fudgeFactor;

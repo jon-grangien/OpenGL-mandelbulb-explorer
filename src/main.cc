@@ -35,7 +35,7 @@ struct FractalUniforms {
   float baseMinDistance = 0.00001;
   float minDistance = baseMinDistance;
   int minDistanceFactor = 0;
-  float mandelIters = 1000;
+  int mandelIters = 100;
   float bailLimit = 5.0;
   float power = 8.0;
   float fudgeFactor = 1.0;
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
 
   if (state.weakSettings) {
     u.maxRaySteps = 200.0;
-    u.mandelIters = 100.0;
+    u.mandelIters = 20;
     u.minDistanceFactor = 3;
     u.power = 6.0;
   }
@@ -193,7 +193,7 @@ void display() {
   // Mandel setup
   glUniform1fv(glGetUniformLocation(shader, "u_maxRaySteps"), 1, &u.maxRaySteps);
   glUniform1fv(glGetUniformLocation(shader, "u_minDistance"), 1, &u.minDistance);
-  glUniform1fv(glGetUniformLocation(shader, "u_mandelIters"), 1, &u.mandelIters);
+  glUniform1i(glGetUniformLocation(shader, "u_mandelIters"), u.mandelIters);
   glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &u.bailLimit);
   glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &u.power);
   glUniform1i(glGetUniformLocation(shader, "u_phongShading"), u.phongShading);
@@ -223,7 +223,7 @@ void renderGui() {
   ImGui::Begin("Settings");
   ImGui::Text("Graphics values");
   ImGui::SliderFloat("Max ray steps", &u.maxRaySteps, 5.0f, 4000.0f);
-  ImGui::SliderFloat("Mandel iters", &u.mandelIters, 1.0f, 3000.0f);
+  ImGui::SliderInt("Mandel iters", &u.mandelIters, 1, 80);
   ImGui::SliderInt("Min dist factor", &u.minDistanceFactor, -5, 3);
 
   // Adjust the min distance by a decimal
