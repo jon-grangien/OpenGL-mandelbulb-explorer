@@ -19,10 +19,15 @@ void setGuiStyle();
 float STEP_SIZE = 0.001f;
 unsigned int INITIAL_WIDTH = 800;
 unsigned int INITIAL_HEIGHT = 640;
-//float NEAR_PLANE = -10.0f;
-//float FAR_PLANE = 1.0f;
-float NEAR_PLANE = -0.1f;
-float FAR_PLANE = -100.0f;
+
+// Correct setup with artifacts
+//float NEAR_PLANE = -0.1f;
+//float FAR_PLANE = -100.0f;
+
+// Incorrect setup with less artifacts
+float NEAR_PLANE = 0.1f;
+float FAR_PLANE = 100.0f;
+
 float FOV = 50.0f;
 
 struct FractalUniforms {

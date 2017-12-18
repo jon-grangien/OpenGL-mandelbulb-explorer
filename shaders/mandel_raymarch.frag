@@ -204,6 +204,46 @@ float DEMandelBulb(vec3 pos) {
 	return u_fudgeFactor * 0.5 * log(r) * r / dr;
 }
 
+void sphereFold(inout vec3 z, inout float dz) {
+    float minRadius2 = 0.01;
+    float fixedRadius2 = 2.005;
+
+	float r2 = dot(z,z);
+	if (r2 < minRadius2) {
+		// linear inner scaling
+		float temp = (fixedRadius2/minRadius2);
+		z *= temp;
+		dz*= temp;
+	} else if (r2 < fixedRadius2) {
+		// this is the actual sphere inversion
+		float temp = (fixedRadius2/r2);
+		z *= temp;
+		dz*= temp;
+	}
+}
+
+void boxFold(inout vec3 z, inout float dz) {
+    float foldingLimit = 1.0;
+	z = clamp(z, -foldingLimit, foldingLimit) * 2.0 - z;
+}
+
+float DEMandelbox(vec3 z) {
+	vec3 offset = z;
+	float dr = 1.0;
+	int n;
+	float scale = 0.01;
+
+	for (n = 0; n < 13; n++) {
+		boxFold(z, dr);       // Reflect
+		sphereFold(z, dr);    // Sphere Inversion
+
+        z=scale*z + offset;  // Scale & Translate
+        dr = dr*abs(scale)+1.0;
+	}
+	float r = length(z);
+	return r / abs(dr);
+}
+
 // March with distance estimate and return grayscale value
 float simpleMarch(vec3 from, vec3 dir, out int stepsTaken, out vec3 pos) {
 	float totalDistance = 0.0;
@@ -217,6 +257,9 @@ float simpleMarch(vec3 from, vec3 dir, out int stepsTaken, out vec3 pos) {
 
 		if (distance < u_minDistance)
             break;
+
+        // Better performance but no bg color
+		//if (distance < u_minDistance || distance > 20.0)
 	}
 
 	stepsTaken = steps;
@@ -312,7 +355,7 @@ void main() {
     // Dead pixels removal
     color = (clamp(color,0.,1.));
 
-    // AO?
+    // AO
     //color = mix(0.2 * color, color, gsValue);
 
     outColor = vec4(color, 1.0);
