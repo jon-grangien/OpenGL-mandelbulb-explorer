@@ -19,10 +19,12 @@ uniform float u_mandelRFactor;
 uniform float u_mandelGFactor;
 uniform float u_mandelBFactor;
 
+uniform vec3 u_lightPos;
 uniform vec3 u_bgColor;
 uniform vec3 u_mandelColorA;
 uniform vec3 u_mandelColorB;
 uniform vec3 u_glowColor;
+uniform float u_shadowDarkness;
 uniform float u_glowFactor;
 uniform bool u_showBgGradient;
 uniform bool u_phongShading;
@@ -34,8 +36,6 @@ uniform float u_noiseFactor;
 uniform bool u_gammaCorrection;
 
 out vec4 outColor;
-
-const vec3 lightPos = vec3(5.0, 0.0, -30.0);
 
 #define SPHERE_R 0.9
 #define SCALE 0.5
@@ -255,7 +255,7 @@ float simpleMarch(vec3 from, vec3 dir, out int stepsTaken, out vec3 pos) {
 		float distance = DEMandelBulb(p);
 		totalDistance += distance;
 
-		if (distance < u_minDistance)
+		if (distance < u_minDistance && steps > 2) // First few steps are generally not hits, fixes shadow rays
             break;
 
         // Better performance but no bg color
@@ -301,7 +301,7 @@ vec3 calculateBlinnPhong(vec3 diffColor, vec3 p, vec3 rayDir) {
     float distance = length(eyeVec);
     distance = distance * distance;
     eyeVec = normalize(eyeVec);
-    vec3 lightVec = normalize(lightPos - p);
+    vec3 lightVec = normalize(u_lightPos - p);
     vec3 H = normalize(lightVec + eyeVec);
 
     float lightPower = 0.4;
@@ -316,6 +316,16 @@ vec3 calculateBlinnPhong(vec3 diffColor, vec3 p, vec3 rayDir) {
 
     // With gamma correction if we assume ambient-, diff-, specColor have been linearized
     return mix(BPColor, pow(BPColor, vec3(1.0/screenGamma)), float(u_gammaCorrection));
+}
+
+// Cast shadow ray towards light source
+// If hit DE on the way, put area in shadow
+vec3 castShadowRay(vec3 from, in vec3 color) {
+    int stepsTaken = 0;
+    vec3 pos;
+    float gsValue = simpleMarch(from, normalize(u_lightPos - from), stepsTaken, pos);
+
+    return mix(color, u_shadowDarkness * color, gsValue);
 }
 
 void main() {
@@ -351,6 +361,9 @@ void main() {
     
     // Mix in glow
     color = mix(u_glowFactor * u_glowColor, color, gsValue);
+
+    // Soft shadow
+    color = mix(color, castShadowRay(mandelPos, color), float(u_phongShading));
 
     // Dead pixels removal
     color = (clamp(color,0.,1.));

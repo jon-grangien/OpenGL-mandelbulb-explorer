@@ -39,7 +39,7 @@ struct FractalUniforms {
   float bailLimit = 5.0;
   float power = 8.0;
   float fudgeFactor = 1.0;
-  float noiseFactor = 1.0;
+  float noiseFactor = 0.5;
   vec3 bgColor = vec3(0.69, 0.55, 0.76);
   float mandelRFactor = 1.0;
   float mandelGFactor = 1.0;
@@ -48,6 +48,8 @@ struct FractalUniforms {
   float glowFactor = 1.0;
   bool showBgGradient = true;
 
+  vec3 lightPos = vec3(3.0, 3.0, 10.0);
+  float shadowDarkness = 0.2f;
   bool phongShading = true;
   float ambientIntensity = 1.0;
   float diffuseIntensity = 1.0;
@@ -195,6 +197,8 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &u.bailLimit);
   glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &u.power);
   glUniform1i(glGetUniformLocation(shader, "u_phongShading"), u.phongShading);
+  glUniform3fv(glGetUniformLocation(shader, "u_lightPos"), 1, glm::value_ptr(u.lightPos));
+  glUniform1fv(glGetUniformLocation(shader, "u_shadowDarkness"), 1, &u.shadowDarkness);
   glUniform3fv(glGetUniformLocation(shader, "u_bgColor"), 1, glm::value_ptr(u.bgColor));
   glUniform1fv(glGetUniformLocation(shader, "u_mandelRFactor"), 1, &u.mandelRFactor);
   glUniform1fv(glGetUniformLocation(shader, "u_mandelGFactor"), 1, &u.mandelGFactor);
@@ -257,6 +261,13 @@ void renderGui() {
   ImGui::SliderFloat("Mandel B", &u.mandelBFactor, 1.0f, 8.0f);
   ImGui::SliderFloat("Noise", &u.noiseFactor, 0.0f, 1.0f);
   if (u.phongShading) {
+    ImGui::Separator();
+    ImGui::Text("Light source position");
+    ImGui::SliderFloat("Light pos x", &u.lightPos.x, -10.0f, 10.0f);
+    ImGui::SliderFloat("Light pos y", &u.lightPos.y, -10.0f, 10.0f);
+    ImGui::SliderFloat("Light pos z", &u.lightPos.z, -10.0f, 10.0f);
+    ImGui::Separator();
+    ImGui::SliderFloat("Shadow darkness", &u.shadowDarkness, 0.0f, 0.5f);
     ImGui::Separator();
     ImGui::Text("Blinn-phong shading (if light src)");
     ImGui::SliderFloat("Ambient", &u.ambientIntensity, 0.0f, 1.0f);
