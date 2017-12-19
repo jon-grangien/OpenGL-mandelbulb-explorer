@@ -325,7 +325,7 @@ vec3 castShadowRay(vec3 from, in vec3 color) {
     vec3 pos;
     float gsValue = simpleMarch(from, normalize(u_lightPos - from), stepsTaken, pos);
 
-    return mix(color, u_shadowDarkness * color, gsValue);
+    return mix(color, u_shadowDarkness * color, smoothstep(0.0, 1.0, gsValue));
 }
 
 void main() {
@@ -336,7 +336,7 @@ void main() {
     vec3 mandelPos;
     float gsValue = simpleMarch(vertRayOrigin, vertRayDirection, stepsTaken, mandelPos);
 
-    // Ray miss; bg plane color
+    // Ray miss completely; bg plane color
     if (gsValue < LOW_P_ZERO) {
         color = u_showBgGradient ? mix(u_bgColor, u_bgColor*0.8, uv.y) : u_bgColor;
         outColor = vec4(color, 1.0);
@@ -360,7 +360,7 @@ void main() {
     color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_phongShading));
     
     // Mix in glow
-    color = mix(u_glowFactor * u_glowColor, color, gsValue);
+    color = mix(u_glowFactor * u_glowColor, color, smoothstep(0.0, 0.7, gsValue));
 
     // Soft shadow
     color = mix(color, castShadowRay(mandelPos, color), float(u_phongShading));
