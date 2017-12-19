@@ -40,7 +40,7 @@ struct FractalUniforms {
   float power = 8.0;
   float fudgeFactor = 1.0;
   float noiseFactor = 0.5;
-  vec3 bgColor = vec3(0.69, 0.55, 0.76);
+  vec3 bgColor = vec3(0.8, 0.85, 1.0);
   float mandelRFactor = 1.0;
   float mandelGFactor = 1.0;
   float mandelBFactor = 3.0;
