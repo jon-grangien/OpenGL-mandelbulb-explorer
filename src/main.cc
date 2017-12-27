@@ -31,13 +31,28 @@ float FAR_PLANE = 100.0f;
 float FOV = 50.0f;
 
 struct FractalUniforms {
+
+  // Renderer
   float maxRaySteps = 1000.0;
   float baseMinDistance = 0.00001;
   float minDistance = baseMinDistance;
   int minDistanceFactor = 0;
   int mandelIters = 100;
   float bailLimit = 5.0;
+
+  // Mandelbulb
   float power = 8.0;
+
+  // Box
+  int boxFoldFactor = 1;
+  float boxFoldingLimit = 1.0;
+
+  // Sphere
+  int sphereFoldFactor = 1;
+  float sphereMinRadius = 0.01;
+  float sphereFixedRadius = 2.0;
+  bool sphereMinTimeVariance = false;
+
   float fudgeFactor = 1.0;
   float noiseFactor = 0.5;
   vec3 bgColor = vec3(0.8, 0.85, 1.0);
@@ -196,6 +211,12 @@ void display() {
   glUniform1i(glGetUniformLocation(shader, "u_mandelIters"), u.mandelIters);
   glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &u.bailLimit);
   glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &u.power);
+  glUniform1i(glGetUniformLocation(shader, "u_boxFoldFactor"), u.boxFoldFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_boxFoldingLimit"), 1, &u.boxFoldingLimit);
+  glUniform1i(glGetUniformLocation(shader, "u_sphereFoldFactor"), u.sphereFoldFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_sphereMinRadius"), 1, &u.sphereMinRadius);
+  glUniform1fv(glGetUniformLocation(shader, "u_sphereFixedRadius"), 1, &u.sphereFixedRadius);
+  glUniform1i(glGetUniformLocation(shader, "u_sphereMinTimeVariance"), u.sphereMinTimeVariance);
   glUniform1i(glGetUniformLocation(shader, "u_phongShading"), u.phongShading);
   glUniform3fv(glGetUniformLocation(shader, "u_lightPos"), 1, glm::value_ptr(u.lightPos));
   glUniform1fv(glGetUniformLocation(shader, "u_shadowDarkness"), 1, &u.shadowDarkness);
@@ -220,8 +241,8 @@ void renderGui() {
 
   // Graphics settings
   //ImGui::SetNextWindowSize(ImVec2(350, 280));
-  ImGui::Begin("Settings");
-  ImGui::Text("Graphics values");
+  ImGui::Begin("Fractal values and graphics");
+  ImGui::Text("Renderer");
   ImGui::SliderFloat("Max ray steps", &u.maxRaySteps, 5.0f, 4000.0f);
   ImGui::SliderInt("Mandel iters", &u.mandelIters, 1, 80);
   ImGui::SliderInt("Min dist factor", &u.minDistanceFactor, -5, 3);
@@ -236,10 +257,24 @@ void renderGui() {
   }
 
   ImGui::SliderFloat("Bailout", &u.bailLimit, 1.0f, 10.0f);
-  ImGui::SliderFloat("Power", &u.power, 1.0f, 32.0f);
-  ImGui::SliderFloat("\"Fudge\"", &u.fudgeFactor, 0.0f, 1.0f);
-  ImGui::Checkbox("Light source", &u.phongShading);
   ImGui::Value("(Min dist):", u.minDistance, "%.9f");
+  ImGui::SliderFloat("\"Fudge\"", &u.fudgeFactor, 0.0f, 1.0f);
+
+  ImGui::Text("Mandelbulb");
+  ImGui::SliderFloat("Power", &u.power, 1.0f, 32.0f);
+  ImGui::Text("Box folding");
+  ImGui::SliderInt("Box fold mult", &u.boxFoldFactor, 0, 5);
+  ImGui::SliderFloat("Fold limit", &u.boxFoldingLimit, 0.0f, 10.0f);
+
+  ImGui::Text("Sphere folding");
+  ImGui::SliderInt("Sphere fold mult", &u.sphereFoldFactor, 0, 5);
+  ImGui::SliderFloat("Min radius", &u.sphereMinRadius, 0.001f, 1.0f, "%.4f");
+  ImGui::SliderFloat("Fixed radius", &u.sphereFixedRadius, 0.0f, 4.0f, "%.2f");
+  ImGui::Checkbox("Beat", &u.sphereMinTimeVariance);
+
+  ImGui::Separator();
+  ImGui::Text("Graphics");
+  ImGui::Checkbox("Light source", &u.phongShading);
   ImGui::Separator();
   ImGui::Text("Controls");
   ImGui::Checkbox("FREE MODE", &cam.freeControlsActive);

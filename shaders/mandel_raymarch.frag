@@ -12,8 +12,20 @@ uniform float u_maxRaySteps;
 uniform float u_minDistance;
 uniform int u_mandelIters;
 uniform float u_bailLimit;
-uniform float u_power;
 uniform float u_fudgeFactor;
+
+// mandelbulb
+uniform float u_power;
+
+// boxfolding
+uniform int u_boxFoldFactor;
+uniform float u_boxFoldingLimit;
+
+// spherefolding
+uniform int u_sphereFoldFactor;
+uniform float u_sphereMinRadius;
+uniform float u_sphereFixedRadius;
+uniform bool u_sphereMinTimeVariance;
 
 uniform float u_mandelRFactor;
 uniform float u_mandelGFactor;
@@ -170,61 +182,28 @@ float DERecTetra(vec3 p) {
 	return length(z) * pow(SCALE, float(-n));
 }
 
-float DEMandelBulb(vec3 pos) {
-	vec3 z = pos;
-	float dr = 1.0;
-	float r = 0.0;
-	for (int i = 0; i < u_mandelIters ; i++) {
-		r = length(z);
-		if (r > u_bailLimit) break;
-
-		// convert to polar coordinates
-		//float theta = acos(z.z/r);
-		//float phi = atan(z.y,z.x);
-
-    // Alternate method to spherical
-		 float theta = asin( z.z/r );
-     float phi = atan( z.y,z.x );
-
-		dr = pow(r, u_power-1.0)*u_power*dr + 1.0;
-
-		// scale and rotate the point
-		float zr = pow(r,u_power);
-		theta = theta*u_power;
-		phi = phi*u_power;
-
-		// convert back to cartesian coordinates
-		//z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
-
-    // Alternate method to spherical
-		 z = zr*vec3( cos(theta)*cos(phi), cos(theta)*sin(phi), sin(theta) );
-
-		z += pos;
-	}
-	return u_fudgeFactor * 0.5 * log(r) * r / dr;
-}
-
 void sphereFold(inout vec3 z, inout float dz) {
-    float minRadius2 = 0.01;
-    float fixedRadius2 = 2.005;
-
 	float r2 = dot(z,z);
-	if (r2 < minRadius2) {
+	float minRadius = u_sphereMinRadius;
+
+	if (float(u_sphereMinTimeVariance) > 0.5)
+	    minRadius += 0.02 * abs(sin(u_time)) * abs(sin(0.1 * u_time));
+
+	if (r2 < minRadius) {
 		// linear inner scaling
-		float temp = (fixedRadius2/minRadius2);
+		float temp = (u_sphereFixedRadius/minRadius);
 		z *= temp;
 		dz*= temp;
-	} else if (r2 < fixedRadius2) {
+	} else if (r2 < u_sphereFixedRadius) {
 		// this is the actual sphere inversion
-		float temp = (fixedRadius2/r2);
+		float temp = (u_sphereFixedRadius/r2);
 		z *= temp;
 		dz*= temp;
 	}
 }
 
-void boxFold(inout vec3 z, inout float dz) {
-    float foldingLimit = 1.0;
-	z = clamp(z, -foldingLimit, foldingLimit) * 2.0 - z;
+void boxFold(inout vec3 z) {
+	z = clamp(z, -u_boxFoldingLimit, u_boxFoldingLimit) * 2.0 - z;
 }
 
 float DEMandelbox(vec3 z) {
@@ -234,7 +213,7 @@ float DEMandelbox(vec3 z) {
 	float scale = 0.01;
 
 	for (n = 0; n < 13; n++) {
-		boxFold(z, dr);       // Reflect
+		boxFold(z);       // Reflect
 		sphereFold(z, dr);    // Sphere Inversion
 
         z=scale*z + offset;  // Scale & Translate
@@ -242,6 +221,47 @@ float DEMandelbox(vec3 z) {
 	}
 	float r = length(z);
 	return r / abs(dr);
+}
+
+void mandelbulb(inout vec3 z, inout float dr, in float r) {
+    float theta = asin( z.z/r );
+    float phi = atan( z.y,z.x );
+
+    dr = pow(r, u_power-1.0)*u_power*dr + 1.0;
+
+    // scale and rotate the point
+    float zr = pow(r,u_power);
+    theta = theta*u_power;
+    phi = phi*u_power;
+
+    // Alternate method to spherical
+    z = zr*vec3( cos(theta)*cos(phi), cos(theta)*sin(phi), sin(theta) );
+}
+
+float DE(vec3 pos) {
+	vec3 z = pos;
+	float dr = 1.0;
+	float r = 0.0;
+	for (int i = 0; i < u_mandelIters; i++) {
+		r = length(z);
+		if (r > u_bailLimit) break;
+
+        mandelbulb(z, dr, r);
+
+        if (u_boxFoldFactor > 0) {
+            boxFold(z);
+            z *= float(u_boxFoldFactor);
+        }
+
+        if (u_sphereFoldFactor > 0) {
+            sphereFold(z, dr);
+            z *= float(u_sphereFoldFactor);
+        }
+
+		z += pos;
+	}
+
+	return u_fudgeFactor * 0.5 * log(r) * r / dr;
 }
 
 // March with distance estimate and return grayscale value
@@ -252,7 +272,7 @@ float simpleMarch(vec3 from, vec3 dir, out int stepsTaken, out vec3 pos) {
 
 	for (steps=0; steps < u_maxRaySteps; steps++) {
 		p = from + totalDistance * dir;
-		float distance = DEMandelBulb(p);
+		float distance = DE(p);
 		totalDistance += distance;
 
 		if (distance < u_minDistance && steps > 2) // First few steps are generally not hits, fixes shadow rays
@@ -271,10 +291,10 @@ float simpleMarch(vec3 from, vec3 dir, out int stepsTaken, out vec3 pos) {
 // calculated from the potential field formed by the DE
 vec3 calculateNormal(vec3 p) {
     float e = 2e-6f;
-    float n = DEMandelBulb(p);
-    float dx = DEMandelBulb(p + vec3(e, 0, 0)) - n;
-    float dy = DEMandelBulb(p + vec3(0, e, 0)) - n;
-    float dz = DEMandelBulb(p + vec3(0, 0, e)) - n;
+    float n = DE(p);
+    float dx = DE(p + vec3(e, 0, 0)) - n;
+    float dy = DE(p + vec3(0, e, 0)) - n;
+    float dz = DE(p + vec3(0, 0, e)) - n;
     vec3 grad = vec3(dx, dy, dz);
     return normalize(grad);
 }
@@ -283,9 +303,9 @@ vec3 calculateNormal(vec3 p) {
 vec3 calcNormal(in vec3 pos) {
     vec3 eps = vec3(0.005,0.0,0.0);
 	return normalize( vec3(
-       DEMandelBulb(pos+eps.xyy) - DEMandelBulb(pos-eps.xyy),
-       DEMandelBulb(pos+eps.yxy) - DEMandelBulb(pos-eps.yxy),
-       DEMandelBulb(pos+eps.yyx) - DEMandelBulb(pos-eps.yyx)
+       DE(pos+eps.xyy) - DE(pos-eps.xyy),
+       DE(pos+eps.yxy) - DE(pos-eps.yxy),
+       DE(pos+eps.yyx) - DE(pos-eps.yyx)
     ));
 }
 
