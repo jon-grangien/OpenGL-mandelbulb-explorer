@@ -53,6 +53,10 @@ struct FractalUniforms {
   float sphereFixedRadius = 2.0;
   bool sphereMinTimeVariance = false;
 
+  // Tetra
+  int tetraFactor = 1;
+  float tetraScale = 1.0;
+
   float fudgeFactor = 1.0;
   float noiseFactor = 0.5;
   vec3 bgColor = vec3(0.8, 0.85, 1.0);
@@ -217,6 +221,8 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_sphereMinRadius"), 1, &u.sphereMinRadius);
   glUniform1fv(glGetUniformLocation(shader, "u_sphereFixedRadius"), 1, &u.sphereFixedRadius);
   glUniform1i(glGetUniformLocation(shader, "u_sphereMinTimeVariance"), u.sphereMinTimeVariance);
+  glUniform1i(glGetUniformLocation(shader, "u_tetraFactor"), u.tetraFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_tetraScale"), 1, &u.tetraScale);
   glUniform1i(glGetUniformLocation(shader, "u_phongShading"), u.phongShading);
   glUniform3fv(glGetUniformLocation(shader, "u_lightPos"), 1, glm::value_ptr(u.lightPos));
   glUniform1fv(glGetUniformLocation(shader, "u_shadowDarkness"), 1, &u.shadowDarkness);
@@ -260,6 +266,9 @@ void renderGui() {
   ImGui::Value("(Min dist):", u.minDistance, "%.9f");
   ImGui::SliderFloat("\"Fudge\"", &u.fudgeFactor, 0.0f, 1.0f);
 
+  ImGui::Separator();
+  ImGui::Text("Fractal values");
+  ImGui::Text("Combine positive multipliers into a fractal");
   ImGui::Text("Mandelbulb");
   ImGui::SliderFloat("Power", &u.power, 1.0f, 32.0f);
   ImGui::Text("Box folding");
@@ -271,6 +280,10 @@ void renderGui() {
   ImGui::SliderFloat("Min radius", &u.sphereMinRadius, 0.001f, 1.0f, "%.4f");
   ImGui::SliderFloat("Fixed radius", &u.sphereFixedRadius, 0.0f, 4.0f, "%.2f");
   ImGui::Checkbox("Beat", &u.sphereMinTimeVariance);
+
+  ImGui::Text("Tetra");
+  ImGui::SliderInt("Tetra mult", &u.tetraFactor, 0, 5);
+  ImGui::SliderFloat("Tetra scale", &u.tetraScale, 0.1f, 2.0f, "%.2f");
 
   ImGui::Separator();
   ImGui::Text("Graphics");

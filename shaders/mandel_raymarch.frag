@@ -27,6 +27,10 @@ uniform float u_sphereMinRadius;
 uniform float u_sphereFixedRadius;
 uniform bool u_sphereMinTimeVariance;
 
+// tetra
+uniform int u_tetraFactor;
+uniform float u_tetraScale;
+
 uniform float u_mandelRFactor;
 uniform float u_mandelGFactor;
 uniform float u_mandelBFactor;
@@ -50,7 +54,6 @@ uniform bool u_gammaCorrection;
 out vec4 outColor;
 
 #define SPHERE_R 0.9
-#define SCALE 0.5
 #define LOW_P_ZERO 0.00001
 
 //
@@ -161,25 +164,35 @@ float DESphere(vec3 p) {
     return length(p) - SPHERE_R;
 }
 
-float DERecTetra(vec3 p) {
+void recTetra(inout vec3 z) {
 	vec3 a1 = vec3(1,1,1);
 	vec3 a2 = vec3(-1,-1,1);
 	vec3 a3 = vec3(1,-1,-1);
 	vec3 a4 = vec3(-1,1,-1);
-	vec3 c;
-	int n = 0;
-	float dist, d;
-	vec3 z;
-	while (n < u_maxRaySteps) {
-		 c = a1; dist = length(z-a1);
-	        d = length(z-a2); if (d < dist) { c = a2; dist=d; }
-		 d = length(z-a3); if (d < dist) { c = a3; dist=d; }
-		 d = length(z-a4); if (d < dist) { c = a4; dist=d; }
-		z = SCALE*z-c*(SCALE-1.0);
-		n++;
-	}
 
-	return length(z) * pow(SCALE, float(-n));
+    vec3 c = a1;
+    float d = 0.0;
+    float dist = length(z-a1);
+
+    d = length(z-a2);
+    if (d < dist) {
+        c = a2;
+        dist=d;
+    }
+
+    d = length(z-a3);
+    if (d < dist) {
+        c = a3;
+        dist=d;
+    }
+
+    d = length(z-a4);
+    if (d < dist) {
+        c = a4;
+        dist=d;
+    }
+
+    z = u_tetraScale*z-c*(u_tetraScale-1.0);
 }
 
 void sphereFold(inout vec3 z, inout float dz) {
@@ -256,6 +269,11 @@ float DE(vec3 pos) {
         if (u_sphereFoldFactor > 0) {
             sphereFold(z, dr);
             z *= float(u_sphereFoldFactor);
+        }
+
+        if (u_tetraFactor > 0) {
+            recTetra(z);
+            z *= float(u_tetraFactor);
         }
 
 		z += pos;
