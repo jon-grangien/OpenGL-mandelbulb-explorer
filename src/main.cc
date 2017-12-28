@@ -71,6 +71,14 @@ struct FractalUniforms {
   float glowFactor = 1.0;
   bool showBgGradient = true;
 
+  vec4 orbitStrength = vec4(-1.0, -1.8, -1.4, 1.3);
+  vec3 otColor0 = vec3(0.3, 0.5, 0.2);
+  vec3 otColor1 = vec3(0.6, 0.2, 0.5);
+  vec3 otColor2 = vec3(0.25, 0.7, 0.9);
+  vec3 otColor3 = vec3(0.2, 0.45, 0.25);
+  vec3 otColorBase = vec3(0.3, 0.6, 0.3);
+  float otBaseStrength = 0.5;
+
   vec3 lightPos = vec3(3.0, 3.0, 10.0);
   float shadowDarkness = 0.2f;
   bool phongShading = true;
@@ -241,6 +249,14 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_tetraScale"), 1, &u.tetraScale);
 
   // Graphics
+  glUniform4fv(glGetUniformLocation(shader, "u_orbitStrength"), 1, glm::value_ptr(u.orbitStrength));
+  glUniform3fv(glGetUniformLocation(shader, "u_color0"), 1, glm::value_ptr(u.otColor0));
+  glUniform3fv(glGetUniformLocation(shader, "u_color1"), 1, glm::value_ptr(u.otColor1));
+  glUniform3fv(glGetUniformLocation(shader, "u_color2"), 1, glm::value_ptr(u.otColor2));
+  glUniform3fv(glGetUniformLocation(shader, "u_color3"), 1, glm::value_ptr(u.otColor3));
+  glUniform3fv(glGetUniformLocation(shader, "u_colorBase"), 1, glm::value_ptr(u.otColorBase));
+  glUniform1fv(glGetUniformLocation(shader, "u_baseColorStrength"), 1, &u.otBaseStrength);
+
   glUniform1i(glGetUniformLocation(shader, "u_phongShading"), u.phongShading);
   glUniform3fv(glGetUniformLocation(shader, "u_lightPos"), 1, glm::value_ptr(u.lightPos));
   glUniform1fv(glGetUniformLocation(shader, "u_shadowDarkness"), 1, &u.shadowDarkness);
@@ -338,11 +354,23 @@ void renderGui() {
   ImGui::ColorEdit3("Bg color", (float*)&u.bgColor);
   ImGui::Checkbox("Bg gradient", &u.showBgGradient);
   ImGui::Separator();
+  ImGui::Text("Orbit trap method");
+  ImGui::ColorEdit3("Color 0", (float*)&u.otColor0);
+  ImGui::ColorEdit3("Color 1", (float*)&u.otColor1);
+  ImGui::ColorEdit3("Color 2", (float*)&u.otColor2);
+  ImGui::ColorEdit3("Color 3", (float*)&u.otColor3);
+  ImGui::ColorEdit3("Base Color", (float*)&u.otColorBase);
+  ImGui::SliderFloat("Base color strength", &u.otBaseStrength, 0.0f, 1.0f);
+  ImGui::SliderFloat("Orbit strength X", &u.orbitStrength.x, -3.0f, 3.0f);
+  ImGui::SliderFloat("Orbit strength Y", &u.orbitStrength.y, -3.0f, 3.0f);
+  ImGui::SliderFloat("Orbit strength Z", &u.orbitStrength.z, -3.0f, 3.0f);
+  ImGui::SliderFloat("Orbit strength R", &u.orbitStrength.w, -3.0f, 3.0f);
+  ImGui::Separator();
   ImGui::ColorEdit3("Glow color", (float*)&u.glowColor);
   ImGui::SliderFloat("Glow strength", &u.glowFactor, 0.0f, 1.0f);
-  ImGui::SliderFloat("Mandel R", &u.mandelRFactor, 1.0f, MANDEL_COLOR_FACTOR_MAX);
-  ImGui::SliderFloat("Mandel G", &u.mandelGFactor, 1.0f, MANDEL_COLOR_FACTOR_MAX);
-  ImGui::SliderFloat("Mandel B", &u.mandelBFactor, 1.0f, MANDEL_COLOR_FACTOR_MAX);
+  //ImGui::SliderFloat("Mandel R", &u.mandelRFactor, 1.0f, MANDEL_COLOR_FACTOR_MAX);
+  //ImGui::SliderFloat("Mandel G", &u.mandelGFactor, 1.0f, MANDEL_COLOR_FACTOR_MAX);
+  //ImGui::SliderFloat("Mandel B", &u.mandelBFactor, 1.0f, MANDEL_COLOR_FACTOR_MAX);
   ImGui::SliderFloat("Noise", &u.noiseFactor, 0.0f, 1.0f);
 
   if (u.phongShading) {
