@@ -43,6 +43,7 @@ struct FractalUniforms {
 
   // Mandelbulb
   float power = 8.0;
+  int derivativeBias = 1;
 
   // Box
   int boxFoldFactor = 1;
@@ -219,6 +220,7 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_minDistance"), 1, &u.minDistance);
   glUniform1i(glGetUniformLocation(shader, "u_mandelIters"), u.mandelIters);
   glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &u.bailLimit);
+  glUniform1i(glGetUniformLocation(shader, "u_derivativeBias"), u.derivativeBias);
   glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &u.power);
   glUniform1i(glGetUniformLocation(shader, "u_boxFoldFactor"), state.boxFoldingOn ? u.boxFoldFactor : 0);
   glUniform1fv(glGetUniformLocation(shader, "u_boxFoldingLimit"), 1, &u.boxFoldingLimit);
@@ -277,6 +279,7 @@ void renderGui() {
 
   ImGui::Text("Mandelbulb");
   ImGui::SliderFloat("Power", &u.power, 1.0f, 32.0f);
+  ImGui::SliderInt("Derivative bias", &u.derivativeBias, 0, 10);
 
   ImGui::Text("Box folding");
   ImGui::Checkbox("Mix box folding", &state.boxFoldingOn);

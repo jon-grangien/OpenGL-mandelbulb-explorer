@@ -16,6 +16,7 @@ uniform float u_fudgeFactor;
 
 // mandelbulb
 uniform float u_power;
+uniform int u_derivativeBias;
 
 // boxfolding
 uniform int u_boxFoldFactor;
@@ -240,7 +241,11 @@ void mandelbulb(inout vec3 z, inout float dr, in float r) {
     float theta = asin( z.z/r );
     float phi = atan( z.y,z.x );
 
-    dr = pow(r, u_power-1.0)*u_power*dr + 1.0;
+    //dr = pow(r, u_power-1.0)*u_power*dr + 1.0;
+
+    // With Mermelada's tweak to reduce errors
+    // http://www.fractalforums.com/new-theories-and-research/error-estimation-of-distance-estimators/msg102670/?topicseen#msg102670
+    dr = max(dr * float(u_derivativeBias), pow(r, u_power - 1.0) * u_power * dr + 1.0);
 
     // scale and rotate the point
     float zr = pow(r,u_power);
