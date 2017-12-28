@@ -44,6 +44,8 @@ struct FractalUniforms {
   // Mandelbulb
   float power = 8.0;
   int derivativeBias = 1;
+  bool julia = false;
+  vec3 juliaC = vec3(0.0, 0.0, 0.0);
 
   // Box
   int boxFoldFactor = 1;
@@ -215,21 +217,30 @@ void display() {
   glUniform2fv(glGetUniformLocation(shader, "u_screenSize"), 1, glm::value_ptr(screenSize));
   glUniform1fv(glGetUniformLocation(shader, "u_stepSize"), 1, &STEP_SIZE);
 
-  // Mandel setup
+  // Renderer
   glUniform1fv(glGetUniformLocation(shader, "u_maxRaySteps"), 1, &u.maxRaySteps);
   glUniform1fv(glGetUniformLocation(shader, "u_minDistance"), 1, &u.minDistance);
   glUniform1i(glGetUniformLocation(shader, "u_mandelIters"), u.mandelIters);
   glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &u.bailLimit);
+
+  // Fractals
   glUniform1i(glGetUniformLocation(shader, "u_derivativeBias"), u.derivativeBias);
   glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &u.power);
+  glUniform1i(glGetUniformLocation(shader, "u_julia"), u.julia);
+  glUniform3fv(glGetUniformLocation(shader, "u_juliaC"), 1, glm::value_ptr(u.juliaC));
+
   glUniform1i(glGetUniformLocation(shader, "u_boxFoldFactor"), state.boxFoldingOn ? u.boxFoldFactor : 0);
   glUniform1fv(glGetUniformLocation(shader, "u_boxFoldingLimit"), 1, &u.boxFoldingLimit);
+
   glUniform1i(glGetUniformLocation(shader, "u_sphereFoldFactor"), state.sphereFoldingOn ? u.sphereFoldFactor : 0);
   glUniform1fv(glGetUniformLocation(shader, "u_sphereMinRadius"), 1, &u.sphereMinRadius);
   glUniform1fv(glGetUniformLocation(shader, "u_sphereFixedRadius"), 1, &u.sphereFixedRadius);
   glUniform1i(glGetUniformLocation(shader, "u_sphereMinTimeVariance"), u.sphereMinTimeVariance);
+
   glUniform1i(glGetUniformLocation(shader, "u_tetraFactor"), state.recursiveTetraOn ? u.tetraFactor : 0);
   glUniform1fv(glGetUniformLocation(shader, "u_tetraScale"), 1, &u.tetraScale);
+
+  // Graphics
   glUniform1i(glGetUniformLocation(shader, "u_phongShading"), u.phongShading);
   glUniform3fv(glGetUniformLocation(shader, "u_lightPos"), 1, glm::value_ptr(u.lightPos));
   glUniform1fv(glGetUniformLocation(shader, "u_shadowDarkness"), 1, &u.shadowDarkness);
@@ -280,6 +291,12 @@ void renderGui() {
   ImGui::Text("Mandelbulb");
   ImGui::SliderFloat("Power", &u.power, 1.0f, 32.0f);
   ImGui::SliderInt("Derivative bias", &u.derivativeBias, 0, 10);
+  ImGui::Checkbox("Julia", &u.julia);
+  if (u.julia) {
+    ImGui::SliderFloat("JuliaC X", &u.juliaC.x, -2.0f, 2.0f);
+    ImGui::SliderFloat("JuliaC Y", &u.juliaC.y, -2.0f, 2.0f);
+    ImGui::SliderFloat("JuliaC Z", &u.juliaC.z, -2.0f, 2.0f);
+  }
 
   ImGui::Text("Box folding");
   ImGui::Checkbox("Mix box folding", &state.boxFoldingOn);

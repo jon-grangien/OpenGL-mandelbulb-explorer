@@ -17,6 +17,8 @@ uniform float u_fudgeFactor;
 // mandelbulb
 uniform float u_power;
 uniform int u_derivativeBias;
+uniform bool u_julia;
+uniform vec3 u_juliaC;
 
 // boxfolding
 uniform int u_boxFoldFactor;
@@ -259,9 +261,8 @@ void mandelbulb(inout vec3 z, inout float dr, in float r) {
 float DE(vec3 pos) {
 	vec3 z = pos;
 	float dr = 1.0;
-	float r = 0.0;
+	float r = length(z);
 	for (int i = 0; i < u_mandelIters; i++) {
-		r = length(z);
 		if (r > u_bailLimit) break;
 
         mandelbulb(z, dr, r);
@@ -281,7 +282,8 @@ float DE(vec3 pos) {
             z *= float(u_tetraFactor);
         }
 
-		z += pos;
+		z += u_julia ? u_juliaC : pos;
+		r = length(z);
 	}
 
 	return u_fudgeFactor * 0.5 * log(r) * r / dr;
