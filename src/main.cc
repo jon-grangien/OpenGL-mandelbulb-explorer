@@ -19,6 +19,7 @@ void setGuiStyle();
 float STEP_SIZE = 0.001f;
 unsigned int INITIAL_WIDTH = 800;
 unsigned int INITIAL_HEIGHT = 640;
+float MANDEL_COLOR_FACTOR_MAX = 5.0f;
 
 // Correct setup with artifacts
 //float NEAR_PLANE = -0.1f;
@@ -79,6 +80,10 @@ struct FractalUniforms {
 
 // App state
 struct AppState {
+  bool boxFoldingOn = false;
+  bool sphereFoldingOn = false;
+  bool recursiveTetraOn = false;
+
   bool logCoordinates = false;
   bool weakSettings = false;
   int nbFrames = 0;
@@ -215,13 +220,13 @@ void display() {
   glUniform1i(glGetUniformLocation(shader, "u_mandelIters"), u.mandelIters);
   glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &u.bailLimit);
   glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &u.power);
-  glUniform1i(glGetUniformLocation(shader, "u_boxFoldFactor"), u.boxFoldFactor);
+  glUniform1i(glGetUniformLocation(shader, "u_boxFoldFactor"), state.boxFoldingOn ? u.boxFoldFactor : 0);
   glUniform1fv(glGetUniformLocation(shader, "u_boxFoldingLimit"), 1, &u.boxFoldingLimit);
-  glUniform1i(glGetUniformLocation(shader, "u_sphereFoldFactor"), u.sphereFoldFactor);
+  glUniform1i(glGetUniformLocation(shader, "u_sphereFoldFactor"), state.sphereFoldingOn ? u.sphereFoldFactor : 0);
   glUniform1fv(glGetUniformLocation(shader, "u_sphereMinRadius"), 1, &u.sphereMinRadius);
   glUniform1fv(glGetUniformLocation(shader, "u_sphereFixedRadius"), 1, &u.sphereFixedRadius);
   glUniform1i(glGetUniformLocation(shader, "u_sphereMinTimeVariance"), u.sphereMinTimeVariance);
-  glUniform1i(glGetUniformLocation(shader, "u_tetraFactor"), u.tetraFactor);
+  glUniform1i(glGetUniformLocation(shader, "u_tetraFactor"), state.recursiveTetraOn ? u.tetraFactor : 0);
   glUniform1fv(glGetUniformLocation(shader, "u_tetraScale"), 1, &u.tetraScale);
   glUniform1i(glGetUniformLocation(shader, "u_phongShading"), u.phongShading);
   glUniform3fv(glGetUniformLocation(shader, "u_lightPos"), 1, glm::value_ptr(u.lightPos));
@@ -268,22 +273,33 @@ void renderGui() {
 
   ImGui::Separator();
   ImGui::Text("Fractal values");
-  ImGui::Text("Combine positive multipliers into a fractal");
+  ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.75f), "Combine positive multipliers into a fractal");
+
   ImGui::Text("Mandelbulb");
   ImGui::SliderFloat("Power", &u.power, 1.0f, 32.0f);
+
   ImGui::Text("Box folding");
-  ImGui::SliderInt("Box fold mult", &u.boxFoldFactor, 0, 5);
-  ImGui::SliderFloat("Fold limit", &u.boxFoldingLimit, 0.0f, 10.0f);
+  ImGui::Checkbox("Mix box folding", &state.boxFoldingOn);
+  if (state.boxFoldingOn) {
+    ImGui::SliderInt("Box fold mult", &u.boxFoldFactor, 0, 5);
+    ImGui::SliderFloat("Fold limit", &u.boxFoldingLimit, 0.0f, 10.0f);
+  }
 
   ImGui::Text("Sphere folding");
-  ImGui::SliderInt("Sphere fold mult", &u.sphereFoldFactor, 0, 5);
-  ImGui::SliderFloat("Min radius", &u.sphereMinRadius, 0.001f, 1.0f, "%.4f");
-  ImGui::SliderFloat("Fixed radius", &u.sphereFixedRadius, 0.0f, 4.0f, "%.2f");
-  ImGui::Checkbox("Beat", &u.sphereMinTimeVariance);
+  ImGui::Checkbox("Mix sphere folding", &state.sphereFoldingOn);
+  if (state.sphereFoldingOn) {
+    ImGui::SliderInt("Sphere fold mult", &u.sphereFoldFactor, 0, 5);
+    ImGui::SliderFloat("Min radius", &u.sphereMinRadius, 0.0000001f, 1.0f, "%.8f");
+    ImGui::SliderFloat("Fixed radius", &u.sphereFixedRadius, 0.0f, 4.0f, "%.2f");
+    ImGui::Checkbox("Beat", &u.sphereMinTimeVariance);
+  }
 
-  ImGui::Text("Tetra");
-  ImGui::SliderInt("Tetra mult", &u.tetraFactor, 0, 5);
-  ImGui::SliderFloat("Tetra scale", &u.tetraScale, 0.1f, 2.0f, "%.2f");
+  ImGui::Text("Recursive Tetra");
+  ImGui::Checkbox("Mix rec tetra", &state.recursiveTetraOn);
+  if (state.recursiveTetraOn) {
+    ImGui::SliderInt("Tetra mult", &u.tetraFactor, 0, 5);
+    ImGui::SliderFloat("Tetra scale", &u.tetraScale, 0.1f, 2.0f, "%.2f");
+  }
 
   ImGui::Separator();
   ImGui::Text("Graphics");
@@ -304,10 +320,11 @@ void renderGui() {
   ImGui::Separator();
   ImGui::ColorEdit3("Glow color", (float*)&u.glowColor);
   ImGui::SliderFloat("Glow strength", &u.glowFactor, 0.0f, 1.0f);
-  ImGui::SliderFloat("Mandel R", &u.mandelRFactor, 1.0f, 8.0f);
-  ImGui::SliderFloat("Mandel G", &u.mandelGFactor, 1.0f, 8.0f);
-  ImGui::SliderFloat("Mandel B", &u.mandelBFactor, 1.0f, 8.0f);
+  ImGui::SliderFloat("Mandel R", &u.mandelRFactor, 1.0f, MANDEL_COLOR_FACTOR_MAX);
+  ImGui::SliderFloat("Mandel G", &u.mandelGFactor, 1.0f, MANDEL_COLOR_FACTOR_MAX);
+  ImGui::SliderFloat("Mandel B", &u.mandelBFactor, 1.0f, MANDEL_COLOR_FACTOR_MAX);
   ImGui::SliderFloat("Noise", &u.noiseFactor, 0.0f, 1.0f);
+
   if (u.phongShading) {
     ImGui::Separator();
     ImGui::Text("Light source position");
@@ -419,12 +436,12 @@ void processInput(GLFWwindow *window) {
 
 void setGuiStyle() {
   ImVec4* colors = ImGui::GetStyle().Colors;
-  vec3 bgLow = 0.7f * vec3(u.bgColor.r, u.bgColor.g, u.bgColor.b);
+  vec3 mandelColorApprox = vec3(u.mandelRFactor, u.mandelGFactor, u.mandelBFactor) / MANDEL_COLOR_FACTOR_MAX;
 
   colors[ImGuiCol_WindowBg]               = ImVec4(0.94f, 0.94f, 0.94f, 0.55f);
   colors[ImGuiCol_Border]                 = ImVec4(0.60f, 0.23f, 0.23f, 0.00f);
-  colors[ImGuiCol_TitleBg]                = ImVec4(bgLow.r, bgLow.g, bgLow.b, 0.40f);
-  colors[ImGuiCol_TitleBgActive]          = ImVec4(bgLow.r, bgLow.g, bgLow.b, 0.65f);
+  colors[ImGuiCol_TitleBg]                = ImVec4(mandelColorApprox.r, mandelColorApprox.g, mandelColorApprox.b, 0.40f);
+  colors[ImGuiCol_TitleBgActive]          = ImVec4(mandelColorApprox.r, mandelColorApprox.g, mandelColorApprox.b, 0.65f);
   colors[ImGuiCol_Text]                   = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
   colors[ImGuiCol_TextDisabled]           = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
   colors[ImGuiCol_ChildBg]                = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
@@ -433,7 +450,7 @@ void setGuiStyle() {
   colors[ImGuiCol_FrameBg]                = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
   colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
   colors[ImGuiCol_FrameBgActive]          = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-  colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(bgLow.r, bgLow.g, bgLow.b, 0.25f);
+  colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(mandelColorApprox.r, mandelColorApprox.g, mandelColorApprox.b, 0.25f);
   colors[ImGuiCol_MenuBarBg]              = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
   colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
   colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.69f, 0.69f, 0.69f, 0.80f);
