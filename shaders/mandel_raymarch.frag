@@ -41,6 +41,8 @@ uniform vec3 u_color2;
 uniform vec3 u_color3;
 uniform vec3 u_colorBase;
 uniform float u_baseColorStrength;
+uniform float u_otCycleIntensity;
+uniform float u_otPaletteOffset;
 
 uniform int u_shadowRayMinStepsTaken;
 uniform vec3 u_phongShadingMixFactor;
@@ -406,14 +408,17 @@ vec3 getColorFromOrbitTrap() {
     float dist12 = dist1to2 / paletteCycleDist;
     float dist23 = dist2to3 / paletteCycleDist;
     float dist30 = dist3to0 / paletteCycleDist;
+    float cycleIntensity = u_otCycleIntensity * 0.1;
+    float pOffset = u_otPaletteOffset / 100.0;
     vec3 colorMix;
 
     // Shorter method
     //orbitTrap.w = sqrt(orbitTrap.w);
-    //orbitColor = X.xyz*X.w*orbitTrap.x +
-    //    Y.xyz*Y.w*orbitTrap.y +
-    //    Z.xyz*Z.w*orbitTrap.z +
-    //    R.xyz*R.w*orbitTrap.w;
+    //colorMix = u_orbitStrength.xyz*u_orbitStrength.w*orbitTrap.x +
+    //    u_orbitStrength.xyz*u_orbitStrength.w*orbitTrap.y +
+    //    u_orbitStrength.xyz*u_orbitStrength.w*orbitTrap.z +
+    //    u_orbitStrength.xyz*u_orbitStrength.w*orbitTrap.w;
+    //    colorMix = mix(u_colorBase, colorMix, u_baseColorStrength);
     // return
 
     // Adapted from
@@ -422,6 +427,9 @@ vec3 getColorFromOrbitTrap() {
                      u_orbitStrength.y*orbitTrap.y+
                      u_orbitStrength.z*orbitTrap.z+
                      u_orbitStrength.w*orbitTrap.w;
+
+    orbitTot = mod(abs(orbitTot) * cycleIntensity, 1.0);
+    orbitTot = mod(orbitTot + pOffset, 1.0);
 
     if (orbitTot <= dist01) {
         colorMix = mix(u_color0, u_color1, abs(orbitTot) / (dist01));
@@ -436,6 +444,9 @@ vec3 getColorFromOrbitTrap() {
         colorMix=mix(u_color3,u_color0,abs(orbitTot-dist01-dist12-dist23)/abs(dist30));
         colorMix=mix(colorMix,u_colorBase,u_baseColorStrength);
     }
+
+    colorMix = max(colorMix, 0.0);
+    colorMix = min(colorMix, 1.0);
 
     return colorMix;
 }
@@ -458,11 +469,11 @@ void main() {
     // Ray hit
     float noise = snoise(5.0 * mandelPos);
     noise += 0.5 * snoise(10.0 * mandelPos);
-    noise += 0.25 * snoise(20.0 * mandelPos);
+    //noise += 0.25 * snoise(20.0 * mandelPos);
     noise = u_noiseFactor * noise;
     //float timeVariance = 0.01 * abs(sin(0.6 * u_time));
 
-    color = getColorFromOrbitTrap() - 0.08 * u_noiseFactor * noise;
+    color = getColorFromOrbitTrap() - 0.1 * u_noiseFactor * noise;
 
     // Mix in blinn-phong shading
     color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_lightSource) * u_phongShadingMixFactor);
@@ -473,11 +484,12 @@ void main() {
     // Soft shadows
     color = mix(color, castShadowRay(mandelPos, color), float(u_lightSource));
 
-    // Dead pixels removal
-    color = (clamp(color,0.,1.));
+    // Most basic AO ever
+    color = mix(0.5 * color, color, gsValue);
 
-    // AO
-    //color = mix(0.2 * color, color, gsValue);
+    // Dead pixels removal
+    color = max(color, 0.0);
+    color = min(color, 1.0);
 
     outColor = vec4(color, 1.0);
 }
