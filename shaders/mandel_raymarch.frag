@@ -444,14 +444,15 @@ vec3 getColorFromOrbitTrap() {
         colorMix = mix(u_color0, u_color1, abs(orbitTot) / (dist01));
         colorMix = mix(colorMix,u_colorBase,u_baseColorStrength);
     } else if (orbitTot <= dist01 + dist12) {
-        colorMix=mix(u_color1,u_color2,abs(orbitTot-dist01)/abs(dist12));
-        colorMix=mix(colorMix,u_colorBase,u_baseColorStrength);
+        colorMix = mix(u_color1,u_color2,abs(orbitTot-dist01)/abs(dist12));
+        colorMix = mix(colorMix,u_colorBase,u_baseColorStrength);
     } else if (orbitTot <= dist01 + dist12 + dist23) {
-        colorMix=mix(u_color2,u_color3,abs(orbitTot-dist01-dist12)/abs(dist23));
-        colorMix=mix(colorMix,u_colorBase,u_baseColorStrength);
+        colorMix = mix(u_color2,u_color3,abs(orbitTot-dist01-dist12)/abs(dist23));
+        colorMix = mix(colorMix,u_colorBase,u_baseColorStrength);
     } else {
-        colorMix=mix(u_color3,u_color0,abs(orbitTot-dist01-dist12-dist23)/abs(dist30));
-        colorMix=mix(colorMix,u_colorBase,u_baseColorStrength);
+        colorMix = mix(u_color3,u_color0,abs(orbitTot-dist01-dist12-dist23)/abs(dist30));
+        colorMix = mix(colorMix,u_colorBase,u_baseColorStrength);
+        colorMix += 0.2 * abs(sin(0.1 * u_time));
     }
 
     colorMix = max(colorMix, 0.0);
