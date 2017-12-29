@@ -10,7 +10,7 @@ uniform vec3 u_eyePos;
 
 uniform float u_maxRaySteps;
 uniform float u_minDistance;
-uniform int u_mandelIters;
+uniform int u_fractalIters;
 uniform float u_bailLimit;
 uniform float u_fudgeFactor;
 
@@ -250,8 +250,8 @@ float DEMandelbox(vec3 z) {
 }
 
 void mandelbulb(inout vec3 z, inout float dr, in float r) {
-    float theta = asin( z.z/r );
-    float phi = atan( z.y,z.x );
+    float theta = asin(z.z / r);
+    float phi = atan(z.y, z.x);
 
     //dr = pow(r, u_power-1.0)*u_power*dr + 1.0;
 
@@ -260,19 +260,19 @@ void mandelbulb(inout vec3 z, inout float dr, in float r) {
     dr = max(dr * float(u_derivativeBias), pow(r, u_power - 1.0) * u_power * dr + 1.0);
 
     // scale and rotate the point
-    float zr = pow(r,u_power);
-    theta = theta*u_power;
-    phi = phi*u_power;
+    float zr = pow(r, u_power);
+    theta = theta * u_power;
+    phi = phi * u_power;
 
     // Alternate method to spherical
-    z = zr*vec3( cos(theta)*cos(phi), cos(theta)*sin(phi), sin(theta) );
+    z = zr * vec3(cos(theta) * cos(phi), cos(theta) * sin(phi), sin(theta));
 }
 
 float DE(vec3 pos) {
 	vec3 z = pos;
 	float dr = 1.0;
 	float r = length(z);
-	for (int i = 0; i < u_mandelIters; i++) {
+	for (int i = 0; i < u_fractalIters; i++) {
 		if (r > u_bailLimit) break;
 
         mandelbulb(z, dr, r);

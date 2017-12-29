@@ -37,7 +37,7 @@ struct FractalUniforms {
   float baseMinDistance = 0.00001;
   float minDistance = baseMinDistance;
   int minDistanceFactor = 0;
-  int mandelIters = 100;
+  int fractalIters = 100;
   float bailLimit = 5.0;
 
   // Mandelbulb
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
 
   if (state.weakSettings) {
     u.maxRaySteps = 200.0;
-    u.mandelIters = 20;
+    u.fractalIters = 20;
     u.minDistanceFactor = 3;
     u.power = 6.0;
   }
@@ -228,7 +228,7 @@ void display() {
   // Renderer
   glUniform1fv(glGetUniformLocation(shader, "u_maxRaySteps"), 1, &u.maxRaySteps);
   glUniform1fv(glGetUniformLocation(shader, "u_minDistance"), 1, &u.minDistance);
-  glUniform1i(glGetUniformLocation(shader, "u_mandelIters"), u.mandelIters);
+  glUniform1i(glGetUniformLocation(shader, "u_fractalIters"), u.fractalIters);
   glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &u.bailLimit);
 
   // Fractals
@@ -285,7 +285,7 @@ void renderGui() {
   ImGui::Begin("Fractal values and graphics");
   ImGui::Text("Renderer");
   ImGui::SliderFloat("Max ray steps", &u.maxRaySteps, 5.0f, 4000.0f);
-  ImGui::SliderInt("Mandel iters", &u.mandelIters, 1, 80);
+  ImGui::SliderInt("Mandel iters", &u.fractalIters, 1, 80);
   ImGui::SliderInt("Min dist factor", &u.minDistanceFactor, -5, 3);
 
   // Adjust the min distance by a decimal
