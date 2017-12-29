@@ -52,7 +52,7 @@ uniform vec3 u_glowColor;
 uniform float u_shadowBrightness;
 uniform float u_glowFactor;
 uniform bool u_showBgGradient;
-uniform bool u_phongShading;
+uniform bool u_lightSource;
 uniform float u_ambientIntensity;
 uniform float u_diffuseIntensity;
 uniform float u_specularIntensity;
@@ -465,13 +465,13 @@ void main() {
     color = getColorFromOrbitTrap() - 0.08 * u_noiseFactor * noise;
 
     // Mix in blinn-phong shading
-    color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_phongShading) * u_phongShadingMixFactor);
+    color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_lightSource) * u_phongShadingMixFactor);
     
     // Mix in glow
     color = mix(u_glowFactor * u_glowColor, color, smoothstep(0.0, 0.7, gsValue));
 
     // Soft shadows
-    color = mix(color, castShadowRay(mandelPos, color), float(u_phongShading));
+    color = mix(color, castShadowRay(mandelPos, color), float(u_lightSource));
 
     // Dead pixels removal
     color = (clamp(color,0.,1.));

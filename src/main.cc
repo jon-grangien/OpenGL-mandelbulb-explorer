@@ -78,7 +78,7 @@ struct FractalUniforms {
   int shadowRayMinStepsTaken = 5;
   vec3 lightPos = vec3(3.0, 3.0, 10.0);
   float shadowBrightness = 0.2f;
-  bool phongShading = true;
+  bool lightSource = true;
   float phongShadingMixFactor = 1.0;
   float ambientIntensity = 1.0;
   float diffuseIntensity = 1.0;
@@ -256,7 +256,7 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_baseColorStrength"), 1, &u.otBaseStrength);
 
   glUniform1i(glGetUniformLocation(shader, "u_shadowRayMinStepsTaken"), u.shadowRayMinStepsTaken);
-  glUniform1i(glGetUniformLocation(shader, "u_phongShading"), u.phongShading);
+  glUniform1i(glGetUniformLocation(shader, "u_lightSource"), u.lightSource);
   glUniform3fv(glGetUniformLocation(shader, "u_phongShadingMixFactor"), 1, &u.phongShadingMixFactor);
   glUniform3fv(glGetUniformLocation(shader, "u_lightPos"), 1, glm::value_ptr(u.lightPos));
   glUniform1fv(glGetUniformLocation(shader, "u_shadowBrightness"), 1, &u.shadowBrightness);
@@ -293,7 +293,7 @@ void renderGui() {
     u.minDistance = u.baseMinDistance;
   }
 
-  ImGui::Value("Min dist = ", u.minDistance, "%.9f");
+  ImGui::Value("Min dist", u.minDistance, "%.9f");
   ImGui::SliderFloat("Bailout", &u.bailLimit, 1.0f, 10.0f);
   ImGui::SliderFloat("\"Fudge\"", &u.fudgeFactor, 0.0f, 1.0f);
 
@@ -336,7 +336,7 @@ void renderGui() {
 
   ImGui::Separator();
   ImGui::Text("Graphics");
-  ImGui::Checkbox("Light source", &u.phongShading);
+  ImGui::Checkbox("Light source", &u.lightSource);
   ImGui::Separator();
   ImGui::Text("Controls");
   ImGui::Checkbox("FREE MODE", &cam.freeControlsActive);
@@ -368,14 +368,14 @@ void renderGui() {
   ImGui::SliderFloat("Glow strength", &u.glowFactor, 0.0f, 1.0f);
   ImGui::SliderFloat("Noise", &u.noiseFactor, 0.0f, 1.0f);
 
-  if (u.phongShading) {
+  if (u.lightSource) {
     ImGui::Separator();
     ImGui::Text("Light source position");
-    ImGui::SliderFloat("Light pos x", &u.lightPos.x, -10.0f, 10.0f);
-    ImGui::SliderFloat("Light pos y", &u.lightPos.y, -10.0f, 10.0f);
-    ImGui::SliderFloat("Light pos z", &u.lightPos.z, -10.0f, 10.0f);
+    ImGui::SliderFloat("Pos x", &u.lightPos.x, -10.0f, 10.0f);
+    ImGui::SliderFloat("Pos y", &u.lightPos.y, -10.0f, 10.0f);
+    ImGui::SliderFloat("Pos z", &u.lightPos.z, -10.0f, 10.0f);
     ImGui::Separator();
-    ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.5), "High steps ignored: less noise less realism");
+    ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.5), "More steps ignored may reduce noise");
     ImGui::SliderFloat("Shadow brighness", &u.shadowBrightness, 0.0f, 0.5f);
     ImGui::SliderInt("Steps ignored", &u.shadowRayMinStepsTaken, 0, 20);
     ImGui::Separator();
