@@ -377,7 +377,7 @@ void renderGui() {
 
   if (u.lightSource) {
     ImGui::Separator();
-    ImGui::Text("Light source position");
+    ImGui::Text("Light src position");
     ImGui::SliderFloat("Pos x", &u.lightPos.x, -10.0f, 10.0f);
     ImGui::SliderFloat("Pos y", &u.lightPos.y, -10.0f, 10.0f);
     ImGui::SliderFloat("Pos z", &u.lightPos.z, -10.0f, 10.0f);

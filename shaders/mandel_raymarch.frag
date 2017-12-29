@@ -319,12 +319,12 @@ float simpleMarch(vec3 from, vec3 dir, out int stepsTaken, out vec3 pos) {
 		float distance = DE(p);
 		totalDistance += distance;
 
-		if (distance < u_minDistance && steps > 2) // First few steps are generally not hits, fixes shadow rays
-            break;
+		if (distance < u_minDistance) // First few steps are generally not hits, fixes shadow rays
+      break;
 
-        // Better performance but no bg color
+    // Better performance but no bg color
 		//if ((distance < u_minDistance || distance > 20.0) && steps > 2)
-        //    break;
+    //  break;
 
 	}
 
@@ -387,15 +387,24 @@ vec3 calculateBlinnPhong(vec3 diffColor, vec3 p, vec3 rayDir) {
 // Cast shadow ray towards light source
 // If hit DE on the way, put area in shadow
 vec3 castShadowRay(vec3 from, in vec3 color) {
-    int stepsTaken = 0;
-    vec3 pos;
-    float gsValue = simpleMarch(from, normalize(u_lightPos - from), stepsTaken, pos);
+    int maxSteps = 35;
+    float totalDistance = 0.0;
+    vec3 dir = normalize(u_lightPos - from);
+    int steps;
+    vec3 p;
+    for (steps = 0; steps < maxSteps; steps++) {
+      p = from + totalDistance * dir;
+      float distance = DE(p);
+      totalDistance += distance;
 
-    if (stepsTaken < u_shadowRayMinStepsTaken) {
-        return color;
+      // Check for min distance but also ignore a few 
+      // steps to try to reduce noise in some places
+      if (distance < u_minDistance && steps > u_shadowRayMinStepsTaken) 
+        break;
     }
 
-    return mix(color, u_shadowBrightness * color, smoothstep(0.0, 1.0, gsValue));
+    float inShadeValue = (1.0 - float(steps) / float(maxSteps)); 
+    return mix(color, u_shadowBrightness * color, smoothstep(0.0, 1.0, inShadeValue));
 }
 
 vec3 getColorFromOrbitTrap() {
