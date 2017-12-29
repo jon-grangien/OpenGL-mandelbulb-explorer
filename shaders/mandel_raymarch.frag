@@ -34,10 +34,6 @@ uniform bool u_sphereMinTimeVariance;
 uniform int u_tetraFactor;
 uniform float u_tetraScale;
 
-uniform float u_mandelRFactor;
-uniform float u_mandelGFactor;
-uniform float u_mandelBFactor;
-
 uniform vec4 u_orbitStrength;
 uniform vec3 u_color0;
 uniform vec3 u_color1;
@@ -454,26 +450,19 @@ void main() {
     }
 
     // Ray hit
-    //float noise = snoise(5.0 * mandelPos);
-    //noise += 0.5 * snoise(10.0 * mandelPos);
-    //noise += 0.25 * snoise(20.0 * mandelPos);
-    //noise = u_noiseFactor * noise;
+    float noise = snoise(5.0 * mandelPos);
+    noise += 0.5 * snoise(10.0 * mandelPos);
+    noise += 0.25 * snoise(20.0 * mandelPos);
+    noise = u_noiseFactor * noise;
     //float timeVariance = 0.01 * abs(sin(0.6 * u_time));
 
-    //float r = stepsTaken*u_mandelRFactor/u_maxRaySteps;
-    //float g = stepsTaken*u_mandelGFactor/u_maxRaySteps;
-    //float b = stepsTaken*u_mandelBFactor/u_maxRaySteps;
-    //r = min(1.0, r + timeVariance);
-    //g = min(1.0, g);
-    //b = min(1.0, b);
-    //color = vec3(r, g, b) - 0.08 * u_noiseFactor * noise;
-    color = getColorFromOrbitTrap();
+    color = getColorFromOrbitTrap() - 0.08 * u_noiseFactor * noise;
     color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_phongShading));
     
     // Mix in glow
     color = mix(u_glowFactor * u_glowColor, color, smoothstep(0.0, 0.7, gsValue));
 
-    // Soft shadow
+    // Soft shadows
     color = mix(color, castShadowRay(mandelPos, color), float(u_phongShading));
 
     // Dead pixels removal

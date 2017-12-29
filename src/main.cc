@@ -19,7 +19,6 @@ void setGuiStyle();
 float STEP_SIZE = 0.001f;
 unsigned int INITIAL_WIDTH = 800;
 unsigned int INITIAL_HEIGHT = 640;
-float MANDEL_COLOR_FACTOR_MAX = 5.0f;
 
 // Correct setup with artifacts
 //float NEAR_PLANE = -0.1f;
@@ -45,7 +44,7 @@ struct FractalUniforms {
   float power = 8.0;
   int derivativeBias = 1;
   bool julia = false;
-  vec3 juliaC = vec3(0.0, 0.0, 0.0);
+  vec3 juliaC = vec3(0.86, 0.23, -0.5);
 
   // Box
   int boxFoldFactor = 1;
@@ -64,9 +63,6 @@ struct FractalUniforms {
   float fudgeFactor = 1.0;
   float noiseFactor = 0.5;
   vec3 bgColor = vec3(0.8, 0.85, 1.0);
-  float mandelRFactor = 1.0;
-  float mandelGFactor = 1.0;
-  float mandelBFactor = 3.0;
   vec3 glowColor = vec3(0.75, 0.9, 1.0);
   float glowFactor = 1.0;
   bool showBgGradient = true;
@@ -261,9 +257,6 @@ void display() {
   glUniform3fv(glGetUniformLocation(shader, "u_lightPos"), 1, glm::value_ptr(u.lightPos));
   glUniform1fv(glGetUniformLocation(shader, "u_shadowDarkness"), 1, &u.shadowDarkness);
   glUniform3fv(glGetUniformLocation(shader, "u_bgColor"), 1, glm::value_ptr(u.bgColor));
-  glUniform1fv(glGetUniformLocation(shader, "u_mandelRFactor"), 1, &u.mandelRFactor);
-  glUniform1fv(glGetUniformLocation(shader, "u_mandelGFactor"), 1, &u.mandelGFactor);
-  glUniform1fv(glGetUniformLocation(shader, "u_mandelBFactor"), 1, &u.mandelBFactor);
   glUniform3fv(glGetUniformLocation(shader, "u_glowColor"), 1, glm::value_ptr(u.glowColor));
   glUniform1fv(glGetUniformLocation(shader, "u_glowFactor"), 1, &u.glowFactor);
   glUniform3fv(glGetUniformLocation(shader, "u_eyePos"), 1, glm::value_ptr(cam.eye));
@@ -302,7 +295,7 @@ void renderGui() {
 
   ImGui::Separator();
   ImGui::Text("Fractal values");
-  ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.75f), "Combine positive multipliers into a fractal");
+  ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.5), "Combine formulas into the fractal");
 
   ImGui::Text("Mandelbulb");
   ImGui::SliderFloat("Power", &u.power, 1.0f, 32.0f);
@@ -361,6 +354,7 @@ void renderGui() {
   ImGui::ColorEdit3("Color 3", (float*)&u.otColor3);
   ImGui::ColorEdit3("Base Color", (float*)&u.otColorBase);
   ImGui::SliderFloat("Base color strength", &u.otBaseStrength, 0.0f, 1.0f);
+  ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.5), "Centered values give more of a blend");
   ImGui::SliderFloat("Orbit strength X", &u.orbitStrength.x, -3.0f, 3.0f);
   ImGui::SliderFloat("Orbit strength Y", &u.orbitStrength.y, -3.0f, 3.0f);
   ImGui::SliderFloat("Orbit strength Z", &u.orbitStrength.z, -3.0f, 3.0f);
@@ -368,9 +362,6 @@ void renderGui() {
   ImGui::Separator();
   ImGui::ColorEdit3("Glow color", (float*)&u.glowColor);
   ImGui::SliderFloat("Glow strength", &u.glowFactor, 0.0f, 1.0f);
-  //ImGui::SliderFloat("Mandel R", &u.mandelRFactor, 1.0f, MANDEL_COLOR_FACTOR_MAX);
-  //ImGui::SliderFloat("Mandel G", &u.mandelGFactor, 1.0f, MANDEL_COLOR_FACTOR_MAX);
-  //ImGui::SliderFloat("Mandel B", &u.mandelBFactor, 1.0f, MANDEL_COLOR_FACTOR_MAX);
   ImGui::SliderFloat("Noise", &u.noiseFactor, 0.0f, 1.0f);
 
   if (u.phongShading) {
@@ -484,12 +475,13 @@ void processInput(GLFWwindow *window) {
 
 void setGuiStyle() {
   ImVec4* colors = ImGui::GetStyle().Colors;
-  vec3 mandelColorApprox = vec3(u.mandelRFactor, u.mandelGFactor, u.mandelBFactor) / MANDEL_COLOR_FACTOR_MAX;
+  vec3 blendedColor = glm::normalize(u.otColor0 + u.otColor1 + u.otColor2 + u.otColor3 + u.otBaseStrength * u.otColorBase);
+
 
   colors[ImGuiCol_WindowBg]               = ImVec4(0.94f, 0.94f, 0.94f, 0.55f);
   colors[ImGuiCol_Border]                 = ImVec4(0.60f, 0.23f, 0.23f, 0.00f);
-  colors[ImGuiCol_TitleBg]                = ImVec4(mandelColorApprox.r, mandelColorApprox.g, mandelColorApprox.b, 0.40f);
-  colors[ImGuiCol_TitleBgActive]          = ImVec4(mandelColorApprox.r, mandelColorApprox.g, mandelColorApprox.b, 0.65f);
+  colors[ImGuiCol_TitleBg]                = ImVec4(blendedColor.r, blendedColor.g, blendedColor.b, 0.40f);
+  colors[ImGuiCol_TitleBgActive]          = ImVec4(blendedColor.r, blendedColor.g, blendedColor.b, 0.65f);
   colors[ImGuiCol_Text]                   = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
   colors[ImGuiCol_TextDisabled]           = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
   colors[ImGuiCol_ChildBg]                = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
@@ -498,7 +490,7 @@ void setGuiStyle() {
   colors[ImGuiCol_FrameBg]                = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
   colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
   colors[ImGuiCol_FrameBgActive]          = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-  colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(mandelColorApprox.r, mandelColorApprox.g, mandelColorApprox.b, 0.25f);
+  colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(blendedColor.r, blendedColor.g, blendedColor.b, 0.25f);
   colors[ImGuiCol_MenuBarBg]              = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
   colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
   colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.69f, 0.69f, 0.69f, 0.80f);
