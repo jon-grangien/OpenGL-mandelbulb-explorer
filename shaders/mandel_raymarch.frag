@@ -42,12 +42,14 @@ uniform vec3 u_color3;
 uniform vec3 u_colorBase;
 uniform float u_baseColorStrength;
 
+uniform int u_shadowRayMinStepsTaken;
+uniform vec3 u_phongShadingMixFactor;
 uniform vec3 u_lightPos;
 uniform vec3 u_bgColor;
 uniform vec3 u_mandelColorA;
 uniform vec3 u_mandelColorB;
 uniform vec3 u_glowColor;
-uniform float u_shadowDarkness;
+uniform float u_shadowBrightness;
 uniform float u_glowFactor;
 uniform bool u_showBgGradient;
 uniform bool u_phongShading;
@@ -355,7 +357,7 @@ vec3 calculateBlinnPhong(vec3 diffColor, vec3 p, vec3 rayDir) {
     vec3 ambientColor = diffColor * 0.8;
     const vec3 lightColor = vec3(1.0);
     const vec3 specColor = vec3(1.0);
-    const float screenGamma   = 2.2;
+    const float screenGamma = 2.2;
 
     vec3 normal = calcNormal(p);
 
@@ -387,7 +389,11 @@ vec3 castShadowRay(vec3 from, in vec3 color) {
     vec3 pos;
     float gsValue = simpleMarch(from, normalize(u_lightPos - from), stepsTaken, pos);
 
-    return mix(color, u_shadowDarkness * color, smoothstep(0.0, 1.0, gsValue));
+    if (stepsTaken < u_shadowRayMinStepsTaken) {
+        return color;
+    }
+
+    return mix(color, u_shadowBrightness * color, smoothstep(0.0, 1.0, gsValue));
 }
 
 vec3 getColorFromOrbitTrap() {
@@ -457,7 +463,9 @@ void main() {
     //float timeVariance = 0.01 * abs(sin(0.6 * u_time));
 
     color = getColorFromOrbitTrap() - 0.08 * u_noiseFactor * noise;
-    color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_phongShading));
+
+    // Mix in blinn-phong shading
+    color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_phongShading) * u_phongShadingMixFactor);
     
     // Mix in glow
     color = mix(u_glowFactor * u_glowColor, color, smoothstep(0.0, 0.7, gsValue));

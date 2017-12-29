@@ -75,9 +75,11 @@ struct FractalUniforms {
   vec3 otColorBase = vec3(0.3, 0.6, 0.3);
   float otBaseStrength = 0.5;
 
+  int shadowRayMinStepsTaken = 5;
   vec3 lightPos = vec3(3.0, 3.0, 10.0);
-  float shadowDarkness = 0.2f;
+  float shadowBrightness = 0.2f;
   bool phongShading = true;
+  float phongShadingMixFactor = 1.0;
   float ambientIntensity = 1.0;
   float diffuseIntensity = 1.0;
   float specularIntensity = 1.0;
@@ -253,9 +255,11 @@ void display() {
   glUniform3fv(glGetUniformLocation(shader, "u_colorBase"), 1, glm::value_ptr(u.otColorBase));
   glUniform1fv(glGetUniformLocation(shader, "u_baseColorStrength"), 1, &u.otBaseStrength);
 
+  glUniform1i(glGetUniformLocation(shader, "u_shadowRayMinStepsTaken"), u.shadowRayMinStepsTaken);
   glUniform1i(glGetUniformLocation(shader, "u_phongShading"), u.phongShading);
+  glUniform3fv(glGetUniformLocation(shader, "u_phongShadingMixFactor"), 1, &u.phongShadingMixFactor);
   glUniform3fv(glGetUniformLocation(shader, "u_lightPos"), 1, glm::value_ptr(u.lightPos));
-  glUniform1fv(glGetUniformLocation(shader, "u_shadowDarkness"), 1, &u.shadowDarkness);
+  glUniform1fv(glGetUniformLocation(shader, "u_shadowBrightness"), 1, &u.shadowBrightness);
   glUniform3fv(glGetUniformLocation(shader, "u_bgColor"), 1, glm::value_ptr(u.bgColor));
   glUniform3fv(glGetUniformLocation(shader, "u_glowColor"), 1, glm::value_ptr(u.glowColor));
   glUniform1fv(glGetUniformLocation(shader, "u_glowFactor"), 1, &u.glowFactor);
@@ -289,8 +293,8 @@ void renderGui() {
     u.minDistance = u.baseMinDistance;
   }
 
+  ImGui::Value("Min dist = ", u.minDistance, "%.9f");
   ImGui::SliderFloat("Bailout", &u.bailLimit, 1.0f, 10.0f);
-  ImGui::Value("(Min dist):", u.minDistance, "%.9f");
   ImGui::SliderFloat("\"Fudge\"", &u.fudgeFactor, 0.0f, 1.0f);
 
   ImGui::Separator();
@@ -371,14 +375,17 @@ void renderGui() {
     ImGui::SliderFloat("Light pos y", &u.lightPos.y, -10.0f, 10.0f);
     ImGui::SliderFloat("Light pos z", &u.lightPos.z, -10.0f, 10.0f);
     ImGui::Separator();
-    ImGui::SliderFloat("Shadow darkness", &u.shadowDarkness, 0.0f, 0.5f);
+    ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.5), "High steps ignored: less noise less realism");
+    ImGui::SliderFloat("Shadow brighness", &u.shadowBrightness, 0.0f, 0.5f);
+    ImGui::SliderInt("Steps ignored", &u.shadowRayMinStepsTaken, 0, 20);
     ImGui::Separator();
-    ImGui::Text("Blinn-phong shading (if light src)");
+    ImGui::Text("Blinn-phong shading");
+    ImGui::SliderFloat("Mix-in factor", &u.phongShadingMixFactor, 0.0f, 1.0f);
     ImGui::SliderFloat("Ambient", &u.ambientIntensity, 0.0f, 1.0f);
     ImGui::SliderFloat("Diffuse", &u.diffuseIntensity, 0.0f, 1.0f);
     ImGui::SliderFloat("Specular", &u.specularIntensity, 0.0f, 1.0f);
     ImGui::SliderFloat("Shininess", &u.shininess, 0.0f, 64.0f);
-    ImGui::Checkbox("Gamma correction", &u.gammaCorrection);
+    ImGui::Checkbox("Gamma correction 2.2", &u.gammaCorrection);
   }
   ImGui::End();
 
