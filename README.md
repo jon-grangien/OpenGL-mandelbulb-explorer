@@ -2,8 +2,8 @@
 Render the mandelbulb fractal patterns interactively, with PostFX.
 
 ![full screenshot](https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/full_shot.png)
-![green render](https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/green.png)
-![top black white](https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/top_bw.png)
+![broccolis](https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/2017-12-29-115615_1920x1080_scrot.png)
+![boxfolded](https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/2017-12-29-120439_1920x1080_scrot.png)
 
 ## Usage
 ```
