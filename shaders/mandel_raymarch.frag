@@ -15,6 +15,7 @@ uniform float u_bailLimit;
 uniform float u_fudgeFactor;
 
 // mandelbulb
+uniform bool u_mandelbulbOn;
 uniform float u_power;
 uniform int u_derivativeBias;
 uniform bool u_julia;
@@ -29,6 +30,10 @@ uniform int u_sphereFoldFactor;
 uniform float u_sphereMinRadius;
 uniform float u_sphereFixedRadius;
 uniform bool u_sphereMinTimeVariance;
+
+// mandelbox
+uniform bool u_mandelBoxOn;
+uniform float u_mandelBoxScale;
 
 // tetra
 uniform int u_tetraFactor;
@@ -209,7 +214,7 @@ void recTetra(inout vec3 z) {
 }
 
 void sphereFold(inout vec3 z, inout float dz) {
-	float r2 = dot(z,z);
+	float r2 = dot(z, z);
 	float minRadius = u_sphereMinRadius;
 
 	if (float(u_sphereMinTimeVariance) > 0.5)
@@ -232,21 +237,14 @@ void boxFold(inout vec3 z) {
 	z = clamp(z, -u_boxFoldingLimit, u_boxFoldingLimit) * 2.0 - z;
 }
 
-float DEMandelbox(vec3 z) {
-	vec3 offset = z;
-	float dr = 1.0;
-	int n;
-	float scale = 0.01;
-
-	for (n = 0; n < 13; n++) {
-		boxFold(z);       // Reflect
-		sphereFold(z, dr);    // Sphere Inversion
-
-        z=scale*z + offset;  // Scale & Translate
-        dr = dr*abs(scale)+1.0;
-	}
-	float r = length(z);
-	return r / abs(dr);
+void mandelbox(inout vec3 z, inout float dr, in float r) {
+  vec3 pos = z;
+  for (int i = 0; i < u_fractalIters; i++) {
+    boxFold(z);
+    sphereFold(z, dr);
+    z = u_mandelBoxScale * z + pos;
+    dr = dr * abs(u_mandelBoxScale) + 1.0;
+  }
 }
 
 void mandelbulb(inout vec3 z, inout float dr, in float r) {
@@ -275,7 +273,9 @@ float DE(vec3 pos) {
 	for (int i = 0; i < u_fractalIters; i++) {
 		if (r > u_bailLimit) break;
 
-        mandelbulb(z, dr, r);
+        if (u_mandelbulbOn) {
+          mandelbulb(z, dr, r);
+        }
 
         if (u_boxFoldFactor > 0) {
             boxFold(z);
@@ -285,6 +285,10 @@ float DE(vec3 pos) {
         if (u_sphereFoldFactor > 0) {
             sphereFold(z, dr);
             z *= float(u_sphereFoldFactor);
+        }
+
+        if (u_mandelBoxOn) {
+          mandelbox(z, dr, r);
         }
 
         if (u_tetraFactor > 0) {

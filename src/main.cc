@@ -56,6 +56,10 @@ struct FractalUniforms {
   float sphereFixedRadius = 2.0;
   bool sphereMinTimeVariance = false;
 
+  // Mandelbox
+  int mandelBoxFactor = 1;
+  float mandelBoxScale = 1.2;
+
   // Tetra
   int tetraFactor = 1;
   float tetraScale = 1.0;
@@ -74,7 +78,7 @@ struct FractalUniforms {
   vec3 otColor3 = vec3(0.2, 0.45, 0.25);
   vec3 otColorBase = vec3(0.3, 0.6, 0.3);
   float otBaseStrength = 0.5;
-  float otCycleIntensity = 10.0;
+  float otCycleIntensity = 5.0;
   float otPaletteOffset = 0.0;
 
   int shadowRayMinStepsTaken = 5;
@@ -91,9 +95,13 @@ struct FractalUniforms {
 
 // App state
 struct AppState {
+  bool mandelbulbOn = true;
   bool boxFoldingOn = false;
   bool sphereFoldingOn = false;
+  bool mandelBoxOn = false;
   bool recursiveTetraOn = false;
+
+  bool lowOtCycleIntensity = false;
 
   bool logCoordinates = false;
   bool weakSettings = false;
@@ -232,6 +240,7 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_bailLimit"), 1, &u.bailLimit);
 
   // Fractals
+  glUniform1i(glGetUniformLocation(shader, "u_mandelbulbOn"), state.mandelbulbOn);
   glUniform1i(glGetUniformLocation(shader, "u_derivativeBias"), u.derivativeBias);
   glUniform1fv(glGetUniformLocation(shader, "u_power"), 1, &u.power);
   glUniform1i(glGetUniformLocation(shader, "u_julia"), u.julia);
@@ -244,6 +253,9 @@ void display() {
   glUniform1fv(glGetUniformLocation(shader, "u_sphereMinRadius"), 1, &u.sphereMinRadius);
   glUniform1fv(glGetUniformLocation(shader, "u_sphereFixedRadius"), 1, &u.sphereFixedRadius);
   glUniform1i(glGetUniformLocation(shader, "u_sphereMinTimeVariance"), u.sphereMinTimeVariance);
+
+  glUniform1i(glGetUniformLocation(shader, "u_mandelBoxOn"), state.mandelBoxOn);
+  glUniform1fv(glGetUniformLocation(shader, "u_mandelBoxScale"), 1, &u.mandelBoxScale);
 
   glUniform1i(glGetUniformLocation(shader, "u_tetraFactor"), state.recursiveTetraOn ? u.tetraFactor : 0);
   glUniform1fv(glGetUniformLocation(shader, "u_tetraScale"), 1, &u.tetraScale);
@@ -306,13 +318,16 @@ void renderGui() {
   ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.5), "Combine formulas into the fractal");
 
   ImGui::Text("Mandelbulb");
-  ImGui::SliderFloat("Power", &u.power, 1.0f, 32.0f);
-  ImGui::SliderInt("Derivative bias", &u.derivativeBias, 0, 10);
-  ImGui::Checkbox("Julia", &u.julia);
-  if (u.julia) {
-    ImGui::SliderFloat("JuliaC X", &u.juliaC.x, -2.0f, 2.0f);
-    ImGui::SliderFloat("JuliaC Y", &u.juliaC.y, -2.0f, 2.0f);
-    ImGui::SliderFloat("JuliaC Z", &u.juliaC.z, -2.0f, 2.0f);
+  ImGui::Checkbox("Mix Mandelbulb", &state.mandelbulbOn);
+  if (state.mandelbulbOn) {
+    ImGui::SliderFloat("Power", &u.power, 1.0f, 32.0f);
+    ImGui::SliderInt("Derivative bias", &u.derivativeBias, 0, 10);
+    ImGui::Checkbox("Julia", &u.julia);
+    if (u.julia) {
+      ImGui::SliderFloat("JuliaC X", &u.juliaC.x, -2.0f, 2.0f);
+      ImGui::SliderFloat("JuliaC Y", &u.juliaC.y, -2.0f, 2.0f);
+      ImGui::SliderFloat("JuliaC Z", &u.juliaC.z, -2.0f, 2.0f);
+    }
   }
 
   ImGui::Text("Box folding");
@@ -329,6 +344,16 @@ void renderGui() {
     ImGui::SliderFloat("Min radius", &u.sphereMinRadius, 0.0000001f, 1.0f, "%.8f");
     ImGui::SliderFloat("Fixed radius", &u.sphereFixedRadius, 0.0f, 4.0f, "%.2f");
     ImGui::Checkbox("Beat", &u.sphereMinTimeVariance);
+  }
+
+  ImGui::Text("Mandelbox");
+  ImGui::Checkbox("Mix Mandelbox", &state.mandelBoxOn);
+  if (state.mandelBoxOn) {
+    ImGui::SliderFloat("Scale", &u.mandelBoxScale, 0.01f, 5.0f, "%.3f");
+    ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.5), "Note: Below is same as above if active");
+    ImGui::SliderFloat("Sphere min r", &u.sphereMinRadius, 0.0000001f, 1.0f, "%.8f");
+    ImGui::SliderFloat("Sphere fixed r", &u.sphereFixedRadius, 0.0f, 4.0f, "%.2f");
+    ImGui::SliderFloat("Box fold limit", &u.boxFoldingLimit, 0.0f, 10.0f);
   }
 
   ImGui::Text("Recursive Tetra");
@@ -357,13 +382,16 @@ void renderGui() {
   ImGui::Separator();
   ImGui::Text("Orbit trap palette");
   ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.5), "Place colors w/ palette offset");
+  ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.5), "Reduce cycle intesity if noisy");
   ImGui::ColorEdit3("Color 0", (float*)&u.otColor0);
   ImGui::ColorEdit3("Color 1", (float*)&u.otColor1);
   ImGui::ColorEdit3("Color 2", (float*)&u.otColor2);
   ImGui::ColorEdit3("Color 3", (float*)&u.otColor3);
   ImGui::ColorEdit3("Base Color", (float*)&u.otColorBase);
   ImGui::SliderFloat("Base color strength", &u.otBaseStrength, 0.0f, 1.0f);
-  ImGui::SliderFloat("Cycle intensity", &u.otCycleIntensity, 0.0f, 50.0f);
+  ImGui::Checkbox("Very low cycle intensity (e.g. for mandelbox)", &state.lowOtCycleIntensity);
+  u.otCycleIntensity = (u.otCycleIntensity > 0.0101f && state.lowOtCycleIntensity) ? 0.01f : u.otCycleIntensity;
+  ImGui::SliderFloat("Cycle intensity", &u.otCycleIntensity, 0.00f, state.lowOtCycleIntensity ? 0.01f : 6.0f, "%.5f");
   ImGui::SliderFloat("Palette offset", &u.otPaletteOffset, 0.0f, 100.0f);
   ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.5), "Centered values give more of a blend");
   ImGui::SliderFloat("Orbit strength X", &u.orbitStrength.x, -3.0f, 3.0f);
