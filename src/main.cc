@@ -78,6 +78,10 @@ struct FractalUniforms {
   vec3 otColor3 = vec3(0.2, 0.45, 0.25);
   vec3 otColorBase = vec3(0.3, 0.6, 0.3);
   float otBaseStrength = 0.5;
+  float otDist0to1 = 0.3;
+  float otDist1to2 = 1.0;
+  float otDist2to3 = 0.4;
+  float otDist3to0 = 0.2;
   float otCycleIntensity = 5.0;
   float otPaletteOffset = 0.0;
 
@@ -268,6 +272,10 @@ void display() {
   glUniform3fv(glGetUniformLocation(shader, "u_color3"), 1, glm::value_ptr(u.otColor3));
   glUniform3fv(glGetUniformLocation(shader, "u_colorBase"), 1, glm::value_ptr(u.otColorBase));
   glUniform1fv(glGetUniformLocation(shader, "u_baseColorStrength"), 1, &u.otBaseStrength);
+  glUniform1fv(glGetUniformLocation(shader, "u_otDist0to1"), 1, &u.otDist0to1);
+  glUniform1fv(glGetUniformLocation(shader, "u_otDist1to2"), 1, &u.otDist1to2);
+  glUniform1fv(glGetUniformLocation(shader, "u_otDist2to3"), 1, &u.otDist2to3);
+  glUniform1fv(glGetUniformLocation(shader, "u_otDist3to0"), 1, &u.otDist3to0);
   glUniform1fv(glGetUniformLocation(shader, "u_otCycleIntensity"), 1, &u.otCycleIntensity);
   glUniform1fv(glGetUniformLocation(shader, "u_otPaletteOffset"), 1, &u.otPaletteOffset);
 
@@ -387,6 +395,10 @@ void renderGui() {
   ImGui::ColorEdit3("Color 1", (float*)&u.otColor1);
   ImGui::ColorEdit3("Color 2", (float*)&u.otColor2);
   ImGui::ColorEdit3("Color 3", (float*)&u.otColor3);
+  ImGui::SliderFloat("Dist 0 > 1", &u.otDist0to1, 0.0f, 3.0f);
+  ImGui::SliderFloat("Dist 1 > 2", &u.otDist1to2, 0.0f, 3.0f);
+  ImGui::SliderFloat("Dist 2 > 3", &u.otDist2to3, 0.0f, 3.0f);
+  ImGui::SliderFloat("Dist 3 > 0", &u.otDist3to0, 0.0f, 3.0f);
   ImGui::ColorEdit3("Base Color", (float*)&u.otColorBase);
   ImGui::SliderFloat("Base color strength", &u.otBaseStrength, 0.0f, 1.0f);
   ImGui::Checkbox("Very low cycle intensity (e.g. for mandelbox)", &state.lowOtCycleIntensity);

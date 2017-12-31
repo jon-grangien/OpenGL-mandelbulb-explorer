@@ -45,6 +45,10 @@ uniform vec3 u_color1;
 uniform vec3 u_color2;
 uniform vec3 u_color3;
 uniform vec3 u_colorBase;
+uniform float u_otDist0to1;
+uniform float u_otDist1to2;
+uniform float u_otDist2to3;
+uniform float u_otDist3to0;
 uniform float u_baseColorStrength;
 uniform float u_otCycleIntensity;
 uniform float u_otPaletteOffset;
@@ -298,15 +302,7 @@ float DE(vec3 pos) {
 
 		z += u_julia ? u_juliaC : pos;
 		r = length(z);
-
-		float colorPower = 0.2;
-		float colorShow = 0.27;
-		//orbitTrap = vec4(cos(length(z)));
-        //orbitTrap = vec4((cos(sin(length(z)))+abs(z.z))*colorPower+colorShow);
-        //orbitTrap = vec4((cos(sin(length(z.z)))+tan(z.z)))*colorPower+colorShow;
-        //orbitTrap = vec4((cos(length(z.z))*sin(length(z.z))))*colorPower+colorShow;
-        //orbitTrap = (min(length(z)-vec4(1.0) , dot(z,z)))*colorPower+colorShow;
-        orbitTrap = min(orbitTrap, abs(vec4(z,dot(z,z))));
+    orbitTrap = min(orbitTrap, abs(vec4(z, dot(z,z))));
 	}
 
 	return u_fudgeFactor * 0.5 * log(r) * r / dr;
@@ -412,15 +408,11 @@ vec3 castShadowRay(vec3 from, in vec3 color) {
 }
 
 vec3 getColorFromOrbitTrap() {
-    float dist0to1 = 0.3;
-    float dist1to2 = 1.0;
-    float dist2to3 = 0.4;
-    float dist3to0 = 0.2;
-    float paletteCycleDist = dist0to1 + dist1to2 + dist2to3 + dist3to0;
-    float dist01 = dist0to1 / paletteCycleDist;
-    float dist12 = dist1to2 / paletteCycleDist;
-    float dist23 = dist2to3 / paletteCycleDist;
-    float dist30 = dist3to0 / paletteCycleDist;
+    float paletteCycleDist = u_otDist0to1 + u_otDist1to2 + u_otDist2to3 + u_otDist3to0;
+    float dist01 = u_otDist0to1 / paletteCycleDist;
+    float dist12 = u_otDist1to2 / paletteCycleDist;
+    float dist23 = u_otDist2to3 / paletteCycleDist;
+    float dist30 = u_otDist3to0 / paletteCycleDist;
     float cycleIntensity = u_otCycleIntensity * 0.1;
     float pOffset = u_otPaletteOffset / 100.0;
     vec3 colorMix;
@@ -436,27 +428,24 @@ vec3 getColorFromOrbitTrap() {
 
     // Adapted from
     // https://github.com/3Dickulus/FragM/blob/master/Fragmentarium-Source/Examples/Benesi/Fast-Raytracer-with-Palette.frag
-    float orbitTot = u_orbitStrength.x*orbitTrap.x+
-                     u_orbitStrength.y*orbitTrap.y+
-                     u_orbitStrength.z*orbitTrap.z+
-                     u_orbitStrength.w*orbitTrap.w;
+    float orbitTot = dot(u_orbitStrength, orbitTrap);
 
     orbitTot = mod(abs(orbitTot) * cycleIntensity, 1.0);
     orbitTot = mod(orbitTot + pOffset, 1.0);
 
+    // Try smooth stepping mixes
     if (orbitTot <= dist01) {
-        colorMix = mix(u_color0, u_color1, abs(orbitTot) / (dist01));
-        colorMix = mix(colorMix,u_colorBase,u_baseColorStrength);
+        colorMix = mix(u_color0, u_color1, smoothstep(0.1, 1.0, abs(orbitTot) / (dist01)));
+        colorMix = mix(colorMix, u_colorBase, smoothstep(0.0, 1.0, u_baseColorStrength));
     } else if (orbitTot <= dist01 + dist12) {
-        colorMix = mix(u_color1,u_color2,abs(orbitTot-dist01)/abs(dist12));
-        colorMix = mix(colorMix,u_colorBase,u_baseColorStrength);
+        colorMix = mix(u_color1, u_color2, smoothstep(0.1, 1.0, abs(orbitTot-dist01)/abs(dist12)));
+        colorMix = mix(colorMix, u_colorBase, smoothstep(0.0, 1.0, u_baseColorStrength));
     } else if (orbitTot <= dist01 + dist12 + dist23) {
-        colorMix = mix(u_color2,u_color3,abs(orbitTot-dist01-dist12)/abs(dist23));
-        colorMix = mix(colorMix,u_colorBase,u_baseColorStrength);
+        colorMix = mix(u_color2, u_color3, smoothstep(0.1, 1.0, abs(orbitTot-dist01-dist12)/abs(dist23)));
+        colorMix = mix(colorMix, u_colorBase, smoothstep(0.0, 1.0, u_baseColorStrength));
     } else {
-        colorMix = mix(u_color3,u_color0,abs(orbitTot-dist01-dist12-dist23)/abs(dist30));
-        colorMix = mix(colorMix,u_colorBase,u_baseColorStrength);
-        colorMix += 0.2 * abs(sin(0.1 * u_time));
+        colorMix = mix(u_color3,u_color0, smoothstep(0.1, 1.0, abs(orbitTot-dist01-dist12-dist23)/abs(dist30)));
+        colorMix = mix(colorMix, u_colorBase, smoothstep(0.0, 1.0, u_baseColorStrength));
     }
 
     colorMix = max(colorMix, 0.0);
