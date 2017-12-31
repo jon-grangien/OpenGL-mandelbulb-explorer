@@ -473,10 +473,10 @@ void main() {
     float noise = snoise(5.0 * mandelPos);
     noise += 0.5 * snoise(10.0 * mandelPos);
     //noise += 0.25 * snoise(20.0 * mandelPos);
-    noise = u_noiseFactor * noise;
+    noise = 0.1 * u_noiseFactor * noise;
     //float timeVariance = 0.01 * abs(sin(0.6 * u_time));
 
-    color = getColorFromOrbitTrap() - 0.1 * u_noiseFactor * noise;
+    color = getColorFromOrbitTrap() - noise;
 
     // Mix in blinn-phong shading
     color = mix(color, calculateBlinnPhong(color, mandelPos, vertRayDirection), float(u_lightSource) * u_phongShadingMixFactor);
