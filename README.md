@@ -4,8 +4,9 @@ Render the mandelbulb fractal patterns interactively, with PostFX.
 ![full screenshot](https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/full_shot2.png)
 <img src="https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/2017-12-29-115615_1920x1080_scrot.png" width="400">
 <img src="https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/2017-12-29-183140_1920x1080_scrot.png" width="450">
-<img src="https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/2017-12-29-120439_1920x1080_scrot.png" width="300">
 <img src="https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/2017-12-29-182019_1920x1080_scrot.png" width="300">
+<img src="https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/bulbjulia.png" width="200">
+<img src="https://github.com/codingInSpace/OpenGL-mandelbulb-explorer/blob/master/screenshots/mandelboxoutskirts.png">
 
 ## Usage
 ```
@@ -28,7 +29,7 @@ Controls:
 Tick the "FREE MODE" box to enter free roaming mode, where wasd changes view direction relative to position.
 
 ## Environment
-Built for Linux and tested on Arch Linux. Mac support limitedly implemented. Windows not implemented due to lack of interest. PR required.
+Built for Linux and tested on Arch Linux. Mac support limitedly implemented. Windows support not implemented.
 
 ## Dependencies and installing
 - OpenGL 3.3+ (GLSL 330)
