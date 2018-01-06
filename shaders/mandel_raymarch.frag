@@ -363,10 +363,7 @@ vec3 calculateBlinnPhong(vec3 diffColor, vec3 p, vec3 rayDir) {
 
     vec3 normal = calcNormal(p);
 
-    vec3 eyeVec = u_eyePos - p;
-    float distance = length(eyeVec);
-    distance = distance * distance;
-    eyeVec = normalize(eyeVec);
+    vec3 eyeVec = normalize(u_eyePos - p);
     vec3 lightVec = normalize(u_lightPos - p);
     vec3 H = normalize(lightVec + eyeVec);
 
@@ -377,8 +374,8 @@ vec3 calculateBlinnPhong(vec3 diffColor, vec3 p, vec3 rayDir) {
     specular = pow(specular, u_shininess);
 
     vec3 BPColor = u_ambientIntensity * ambientColor +
-        u_diffuseIntensity * diffColor * lambertian * lightColor * lightPower / distance +
-        u_specularIntensity * specColor * specular * lightColor * lightPower / distance;
+        u_diffuseIntensity * diffColor * lambertian * lightColor * lightPower +
+        u_specularIntensity * specColor * specular * lightColor * lightPower;
 
     // With gamma correction if we assume ambient-, diff-, specColor have been linearized
     return mix(BPColor, pow(BPColor, vec3(1.0/screenGamma)), float(u_gammaCorrection));
