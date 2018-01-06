@@ -281,7 +281,7 @@ void display() {
 
   glUniform1i(glGetUniformLocation(shader, "u_shadowRayMinStepsTaken"), u.shadowRayMinStepsTaken);
   glUniform1i(glGetUniformLocation(shader, "u_lightSource"), u.lightSource);
-  glUniform3fv(glGetUniformLocation(shader, "u_phongShadingMixFactor"), 1, &u.phongShadingMixFactor);
+  glUniform1fv(glGetUniformLocation(shader, "u_phongShadingMixFactor"), 1, &u.phongShadingMixFactor);
   glUniform3fv(glGetUniformLocation(shader, "u_lightPos"), 1, glm::value_ptr(u.lightPos));
   glUniform1fv(glGetUniformLocation(shader, "u_shadowBrightness"), 1, &u.shadowBrightness);
   glUniform3fv(glGetUniformLocation(shader, "u_bgColor"), 1, glm::value_ptr(u.bgColor));
@@ -418,9 +418,9 @@ void renderGui() {
   if (u.lightSource) {
     ImGui::Separator();
     ImGui::Text("Light src position");
-    ImGui::SliderFloat("Pos x", &u.lightPos.x, -10.0f, 10.0f);
-    ImGui::SliderFloat("Pos y", &u.lightPos.y, -10.0f, 10.0f);
-    ImGui::SliderFloat("Pos z", &u.lightPos.z, -10.0f, 10.0f);
+    ImGui::SliderFloat("Pos x", &u.lightPos.x, -20.0f, 20.0f);
+    ImGui::SliderFloat("Pos y", &u.lightPos.y, -20.0f, 20.0f);
+    ImGui::SliderFloat("Pos z", &u.lightPos.z, -20.0f, 20.0f);
     ImGui::Separator();
     ImGui::TextColored(ImVec4(0.0, 0.0, 0.0, 0.5), "More steps ignored may reduce noise");
     ImGui::SliderFloat("Shadow brighness", &u.shadowBrightness, 0.0f, 0.5f);

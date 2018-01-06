@@ -54,7 +54,7 @@ uniform float u_otCycleIntensity;
 uniform float u_otPaletteOffset;
 
 uniform int u_shadowRayMinStepsTaken;
-uniform vec3 u_phongShadingMixFactor;
+uniform float u_phongShadingMixFactor;
 uniform vec3 u_lightPos;
 uniform vec3 u_bgColor;
 uniform vec3 u_mandelColorA;
@@ -488,7 +488,7 @@ void main() {
     color = mix(color, castShadowRay(mandelPos, color), float(u_lightSource));
 
     // Most basic AO ever
-    color = mix(0.5 * color, color, gsValue);
+    //color = mix(0.5 * color, color, gsValue);
 
     // Dead pixels removal
     color = max(color, 0.0);
